@@ -1,0 +1,71 @@
+[gd_scene load_steps=2 format=3 uid="uid://bqd8x5mp8a7g0"]
+
+[ext_resource type="Script" path="res://systems/player/CombatDebugUI.gd" id="1_debug_script"]
+
+[node name="CombatDebugUI" type="CanvasLayer"]
+script = ExtResource("1_debug_script")
+
+[node name="DebugPanel" type="Panel" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -150.0
+offset_right = 350.0
+offset_bottom = -10.0
+color = Color(0, 0, 0, 0.7)
+
+[node name="VBox" type="VBoxContainer" parent="DebugPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+
+[node name="Title" type="Label" parent="DebugPanel/VBox"]
+layout_mode = 2
+text = "Combat System Debug"
+theme_override_colors/font_color = Color(1, 1, 0, 1)
+theme_override_font_sizes/font_size = 14
+
+[node name="HSeparator" type="HSeparator" parent="DebugPanel/VBox"]
+layout_mode = 2
+
+[node name="CombatState" type="Label" parent="DebugPanel/VBox"]
+layout_mode = 2
+text = "State: idle"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="MeleeInfo" type="Label" parent="DebugPanel/VBox"]
+layout_mode = 2
+text = "Melee: 0/3"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="AbilityCooldowns" type="Label" parent="DebugPanel/VBox"]
+layout_mode = 2
+text = "Q: Ready | R: Ready"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="ShieldInfo" type="Label" parent="DebugPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "Shield: none"
+
+[node name="HealthInfo" type="Label" parent="DebugPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "HP: 100/100"
+
+[node name="Controls" type="Label" parent="DebugPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 10
+text = "LClick: Attack | RClick (Hold): Shield | Q/R: Abilities" 

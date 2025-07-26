@@ -49,6 +49,84 @@ var roll_cooldown_timer: float = 0.0
 @export var roll_cooldown_duration: float = 0.8 # Cooldown between rolls
 var roll_direction: Vector2 = Vector2.ZERO # Direction of current roll
 
+# ===== COMBAT SYSTEM =====
+# Combat state variables
+var is_attacking: bool = false
+var is_shielding: bool = false
+var combat_state: String = "idle" # idle, melee, ability, shield, take_damage, death
+
+# Health and damage system
+@export var max_health: int = 100
+var current_health: int = 100
+var is_taking_damage: bool = false
+var is_dead: bool = false
+var damage_animation_duration: float = 0.6 # Duration of take damage animation
+var damage_timer: float = 0.0
+
+# Damage visual effects
+@onready var damage_flash: ColorRect
+var flash_tween: Tween
+@export var damage_flash_duration: float = 0.3
+@export var damage_flash_intensity: float = 0.6
+
+# Death system
+var death_animation_duration: float = 2.0 # Duration of death animation
+var death_timer: float = 0.0
+@onready var game_over_ui: Control
+
+# Melee combo system
+var melee_combo_count: int = 0
+var max_melee_combo: int = 3
+var melee_combo_timer: float = 0.0
+@export var melee_combo_window: float = 1.3 # 1 second window for next attack
+var melee_attack_timer: float = 0.0
+var melee_attack_duration: float = 0.8 # Duration of melee animations
+var can_melee_attack: bool = true
+
+# Special abilities
+var q_ability_cooldown_timer: float = 0.0
+@export var q_ability_cooldown: float = 3.0 # 3 second cooldown for Q
+var r_ability_cooldown_timer: float = 0.0
+@export var r_ability_cooldown: float = 8.0 # 8 second cooldown for R
+var is_using_ability: bool = false
+var ability_timer: float = 0.0
+var ability_duration: float = 1.0 # Duration of ability animations
+var current_ability: String = "" # "q" or "r"
+
+# Shield system
+var shield_state: String = "none" # none, start, hold, end
+var shield_timer: float = 0.0
+var shield_start_duration: float = 0.3 # Duration of shield start animation
+var shield_end_duration: float = 0.3 # Duration of shield end animation
+var is_shield_active: bool = false # True when shield can block attacks
+
+# Hitbox system
+@onready var melee_hitbox: Area2D
+@onready var ability_hitbox: Area2D
+var hitbox_active: bool = false
+var attack_direction: Vector2 = Vector2.ZERO # Direction of current attack (for blocking)
+@export var hitbox_activation_delay: float = 0.3 # Time after animation start to activate hitbox
+@export var hitbox_active_duration: float = 0.2 # How long hitbox stays active
+
+# Particle effects system
+@onready var whirlwind_particles: GPUParticles2D
+@onready var shockwave_particles: GPUParticles2D
+@export var particles_enabled: bool = true # Toggle for particle effects
+@export var particle_activation_delay: float = 0.25 # Delay before particles start
+
+# Player death signal for game controller
+signal player_died
+
+# Debug visualization
+@export var show_hitbox_debug: bool = false
+var debug_hitbox_lines: Array = []
+
+# Combat animation timing
+@export var melee_hitbox_start_frame: int = 6
+@export var melee_hitbox_end_frame: int = 10
+@export var ability_hitbox_start_frame: int = 6
+@export var ability_hitbox_end_frame: int = 12
+
 # Direction mappings for 8-directional movement
 var direction_names = {
 	Vector2.UP: "north",
@@ -62,10 +140,22 @@ var direction_names = {
 }
 
 func _ready():
+	# Add player to groups for AI targeting
+	add_to_group("players")
+	
 	# Ensure the animated sprite is set up
 	if not animated_sprite:
 		push_error("AnimatedSprite2D not found!")
 		return
+	
+	# Setup hitboxes for combat
+	_setup_hitboxes()
+	
+	# Setup damage and death UI elements
+	_setup_damage_death_ui()
+	
+	# Setup debug UI if available
+	_setup_debug_ui()
 	
 	# Capture the mouse for proper control
 	Input.mouse_mode = Input.MOUSE_MODE_CONFINED
@@ -73,6 +163,9 @@ func _ready():
 	# Initialize sprite positioning
 	animated_sprite.position = Vector2.ZERO
 	sprite_visual_offset = Vector2.ZERO
+	
+	# Initialize health
+	current_health = max_health
 	
 	# Start with a default facing direction
 	current_facing_direction = Vector2.RIGHT
@@ -82,13 +175,542 @@ func _physics_process(delta):
 	_handle_mouse_input()
 	_handle_movement_input(delta)
 	_handle_roll_input()
+	_handle_combat_input()
 	_handle_movement_physics(delta)
+	_handle_combat_systems(delta)
 	_update_animation()
 	_handle_animation_smoothing(delta)
 	_handle_turn_cooldown(delta)
 	_handle_roll_cooldown(delta)
 	_ensure_sprite_centered()
+	_update_debug_ui() # Update debug UI every frame
+	_update_debug_visualization() # Update hitbox debug visualization
 	_safety_checks() # Always run safety checks last
+
+# ===== COMBAT SYSTEM FUNCTIONS =====
+
+func _setup_hitboxes():
+	# Create melee hitbox
+	melee_hitbox = Area2D.new()
+	melee_hitbox.name = "MeleeHitbox"
+	var melee_collision = CollisionShape2D.new()
+	var melee_shape = RectangleShape2D.new()
+	melee_shape.size = Vector2(60, 40) # Adjust size as needed
+	melee_collision.shape = melee_shape
+	melee_hitbox.add_child(melee_collision)
+	melee_hitbox.position = Vector2(30, 0) # Offset in front of player
+	melee_hitbox.monitoring = false
+	add_child(melee_hitbox)
+	
+	# Create ability hitbox (larger for AOE)
+	ability_hitbox = Area2D.new()
+	ability_hitbox.name = "AbilityHitbox"
+	var ability_collision = CollisionShape2D.new()
+	var ability_shape = CircleShape2D.new()
+	ability_shape.radius = 80 # Larger radius for AOE abilities
+	ability_collision.shape = ability_shape
+	ability_hitbox.add_child(ability_collision)
+	ability_hitbox.position = Vector2.ZERO # Centered on player for AOE
+	ability_hitbox.monitoring = false
+	add_child(ability_hitbox)
+	
+	# Setup particle effects
+	_setup_particle_effects()
+	
+	# Connect hitbox signals
+	melee_hitbox.area_entered.connect(_on_melee_hitbox_entered)
+	melee_hitbox.body_entered.connect(_on_melee_hitbox_body_entered)
+	ability_hitbox.area_entered.connect(_on_ability_hitbox_entered)
+	ability_hitbox.body_entered.connect(_on_ability_hitbox_body_entered)
+
+func _setup_particle_effects():
+	# Create whirlwind particle effect (for 3rd melee attack and Q ability)
+	whirlwind_particles = GPUParticles2D.new()
+	whirlwind_particles.name = "WhirlwindParticles"
+	whirlwind_particles.emitting = false
+	whirlwind_particles.amount = 50
+	whirlwind_particles.lifetime = 0.5 # Reduced from 1.0 to 0.5
+	whirlwind_particles.position = Vector2.ZERO
+	add_child(whirlwind_particles)
+	
+	# Configure whirlwind particle process material
+	var whirlwind_material = ParticleProcessMaterial.new()
+	whirlwind_material.direction = Vector3(0, -1, 0)
+	whirlwind_material.initial_velocity_min = 50.0
+	whirlwind_material.initial_velocity_max = 100.0
+	whirlwind_material.angular_velocity_min = 180.0
+	whirlwind_material.angular_velocity_max = 360.0
+	whirlwind_material.orbit_velocity_min = 2.0
+	whirlwind_material.orbit_velocity_max = 4.0
+	whirlwind_material.scale_min = 0.3
+	whirlwind_material.scale_max = 0.8
+	whirlwind_material.color = Color.WHITE
+	whirlwind_material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	whirlwind_material.emission_ring_radius = 30.0
+	whirlwind_material.emission_ring_inner_radius = 10.0
+	whirlwind_particles.process_material = whirlwind_material
+	
+	# Create shockwave particle effect (for R ability)
+	shockwave_particles = GPUParticles2D.new()
+	shockwave_particles.name = "ShockwaveParticles"
+	shockwave_particles.emitting = false
+	shockwave_particles.amount = 60 # Slightly reduced for cleaner circle effect
+	shockwave_particles.lifetime = 0.4 # Reduced from 0.8 to 0.4
+	shockwave_particles.position = Vector2.ZERO
+	add_child(shockwave_particles)
+	
+	# Configure shockwave particle process material for expanding circle effect
+	var shockwave_material = ParticleProcessMaterial.new()
+	shockwave_material.direction = Vector3(1, 0, 0) # Radial direction
+	shockwave_material.initial_velocity_min = 100.0 # Increased for better circle expansion
+	shockwave_material.initial_velocity_max = 200.0 # Increased for better circle expansion
+	shockwave_material.gravity = Vector3(0, 0, 0) # No gravity for clean circle
+	shockwave_material.scale_min = 0.4
+	shockwave_material.scale_max = 1.0
+	shockwave_material.color = Color.BROWN
+	shockwave_material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	shockwave_material.emission_ring_radius = 15.0 # Small starting radius
+	shockwave_material.emission_ring_inner_radius = 10.0 # Thin ring
+	shockwave_material.radial_velocity_min = 50.0 # Outward expansion velocity
+	shockwave_material.radial_velocity_max = 120.0 # Maximum outward velocity
+	shockwave_particles.process_material = shockwave_material
+	
+	print("✨ Particle effects initialized")
+
+func _setup_damage_death_ui():
+	# Create damage flash overlay
+	damage_flash = ColorRect.new()
+	damage_flash.name = "DamageFlash"
+	damage_flash.color = Color(1, 0, 0, 0) # Red with no alpha initially
+	damage_flash.mouse_filter = Control.MOUSE_FILTER_IGNORE # Don't block input
+	
+	# Make it cover the entire screen
+	damage_flash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	
+	# Add to a CanvasLayer so it appears on top of everything
+	var damage_canvas = CanvasLayer.new()
+	damage_canvas.name = "DamageEffects"
+	damage_canvas.layer = 100 # High layer to appear on top
+	add_child(damage_canvas)
+	damage_canvas.add_child(damage_flash)
+	
+	# Create Game Over UI
+	game_over_ui = Control.new()
+	game_over_ui.name = "GameOverUI"
+	game_over_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	game_over_ui.visible = false
+	
+	# Background panel
+	var bg_panel = Panel.new()
+	#bg_panel.color = Color(0, 0, 0, 0.8) # Dark semi-transparent background
+	bg_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	game_over_ui.add_child(bg_panel)
+	
+	# Center container
+	var center_container = CenterContainer.new()
+	center_container.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	game_over_ui.add_child(center_container)
+	
+	# VBox for game over elements
+	var vbox = VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	center_container.add_child(vbox)
+	
+	# Game Over title
+	var game_over_label = Label.new()
+	game_over_label.text = "GAME OVER"
+	game_over_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	game_over_label.add_theme_color_override("font_color", Color.RED)
+	game_over_label.add_theme_font_size_override("font_size", 48)
+	vbox.add_child(game_over_label)
+	
+	# Spacer
+	var spacer = Control.new()
+	spacer.custom_minimum_size = Vector2(0, 50)
+	vbox.add_child(spacer)
+	
+	# Restart button
+	var restart_button = Button.new()
+	restart_button.text = "RESTART"
+	restart_button.custom_minimum_size = Vector2(200, 60)
+	restart_button.pressed.connect(_restart_game)
+	vbox.add_child(restart_button)
+	
+	# Add to high-priority canvas layer
+	var game_over_canvas = CanvasLayer.new()
+	game_over_canvas.name = "GameOverCanvas"
+	game_over_canvas.layer = 200 # Even higher layer than damage effects
+	add_child(game_over_canvas)
+	game_over_canvas.add_child(game_over_ui)
+	
+	print("💀 Damage and death UI initialized")
+
+func _handle_combat_input():
+	# Only allow combat input if not already in certain states
+	if is_rolling or is_turning_180 or is_taking_damage or is_dead:
+		return
+	
+	# Left click for melee attacks
+	if Input.is_action_just_pressed("primary_attack") and _can_start_melee():
+		_start_melee_attack()
+	
+	# Q key for first special ability
+	if Input.is_action_just_pressed("ability_q") and _can_use_q_ability():
+		_start_ability("q")
+	
+	# R key for second special ability  
+	if Input.is_action_just_pressed("ability_r") and _can_use_r_ability():
+		_start_ability("r")
+	
+	# Right click for shield - HOLD TO SHIELD system
+	if Input.is_action_just_pressed("secondary_attack") and _can_start_shield():
+		_start_shield()
+	
+	# Continuous check: if shield button is released, end shield immediately
+	# Don't trigger if already ending to prevent endless loop
+	if is_shielding and shield_state != "end" and not Input.is_action_pressed("secondary_attack"):
+		_end_shield()
+
+func _handle_combat_systems(delta):
+	_update_combat_timers(delta)
+	_update_hitbox_positions()
+	_handle_hitbox_timing(delta)
+
+func _update_combat_timers(delta):
+	# Melee combo timer
+	if melee_combo_timer > 0:
+		melee_combo_timer -= delta
+		if melee_combo_timer <= 0:
+			_reset_melee_combo()
+	
+	# Melee attack duration
+	if melee_attack_timer > 0:
+		melee_attack_timer -= delta
+		if melee_attack_timer <= 0:
+			_complete_melee_attack()
+	
+	# Ability cooldowns
+	if q_ability_cooldown_timer > 0:
+		q_ability_cooldown_timer -= delta
+	
+	if r_ability_cooldown_timer > 0:
+		r_ability_cooldown_timer -= delta
+	
+	# Ability duration
+	if ability_timer > 0:
+		ability_timer -= delta
+		if ability_timer <= 0:
+			_complete_ability()
+	
+	# Shield timing
+	if shield_timer > 0:
+		shield_timer -= delta
+		_update_shield_state()
+	
+	# Damage state timer
+	if damage_timer > 0:
+		damage_timer -= delta
+		if damage_timer <= 0:
+			_complete_damage_animation()
+	
+	# Death state timer
+	if death_timer > 0:
+		death_timer -= delta
+		if death_timer <= 0:
+			_complete_death_animation()
+
+# === MELEE COMBAT SYSTEM ===
+
+func _can_start_melee() -> bool:
+	return not is_attacking and not is_using_ability and can_melee_attack and shield_state == "none"
+
+func _start_melee_attack():
+	print("🗡️ Starting melee attack ", melee_combo_count + 1, "/", max_melee_combo)
+	
+	is_attacking = true
+	combat_state = "melee"
+	can_melee_attack = false
+	melee_combo_count += 1
+	melee_attack_timer = melee_attack_duration
+	
+	# Set attack direction for blocking calculations
+	attack_direction = current_facing_direction.normalized()
+	
+	if show_hitbox_debug:
+		print("  🎯 Melee attack direction set to: ", attack_direction)
+	
+	# Set combo window timer for next attack
+	melee_combo_timer = melee_combo_window
+	
+	# Activate hitbox after delay
+	_schedule_hitbox_activation("melee", hitbox_activation_delay)
+	
+	# Trigger particles for 3rd attack (whirlwind spin)
+	if melee_combo_count == 3:
+		_schedule_particle_effect("whirlwind", particle_activation_delay)
+	
+	print("  ⚔️ Melee combo: ", melee_combo_count, "/", max_melee_combo)
+
+func _complete_melee_attack():
+	print("✅ Completed melee attack ", melee_combo_count)
+	
+	is_attacking = false
+	if melee_combo_count < max_melee_combo:
+		# Allow next combo attack within window
+		can_melee_attack = true
+		combat_state = "idle"
+	else:
+		# Max combo reached, reset everything
+		_reset_melee_combo()
+
+func _reset_melee_combo():
+	print("🔄 Resetting melee combo")
+	melee_combo_count = 0
+	can_melee_attack = true
+	combat_state = "idle"
+	melee_combo_timer = 0.0
+
+# === SPECIAL ABILITIES ===
+
+func _can_use_q_ability() -> bool:
+	return q_ability_cooldown_timer <= 0 and not is_attacking and not is_using_ability and shield_state == "none"
+
+func _can_use_r_ability() -> bool:
+	return r_ability_cooldown_timer <= 0 and not is_attacking and not is_using_ability and shield_state == "none"
+
+func _start_ability(ability_type: String):
+	print("✨ Starting ", ability_type.to_upper(), " ability")
+	
+	is_using_ability = true
+	combat_state = "ability"
+	current_ability = ability_type
+	ability_timer = ability_duration
+	
+	# Set attack direction for blocking calculations
+	attack_direction = current_facing_direction.normalized()
+	
+	if show_hitbox_debug:
+		print("  🎯 Ability attack direction set to: ", attack_direction)
+	
+	# Set cooldown
+	if ability_type == "q":
+		q_ability_cooldown_timer = q_ability_cooldown
+		# Q ability is whirlwind
+		_schedule_particle_effect("whirlwind", particle_activation_delay)
+	elif ability_type == "r":
+		r_ability_cooldown_timer = r_ability_cooldown
+		# R ability is shockwave
+		_schedule_particle_effect("shockwave", particle_activation_delay)
+	
+	# Activate larger hitbox for AOE abilities
+	_schedule_hitbox_activation("ability", hitbox_activation_delay)
+
+func _complete_ability():
+	print("✅ Completed ", current_ability.to_upper(), " ability")
+	is_using_ability = false
+	combat_state = "idle"
+	current_ability = ""
+
+# === SHIELD SYSTEM ===
+
+func _can_start_shield() -> bool:
+	return shield_state == "none" and not is_attacking and not is_using_ability
+
+func _start_shield():
+	print("🛡️ Starting shield (hold to maintain)")
+	is_shielding = true
+	shield_state = "start"
+	shield_timer = shield_start_duration
+	combat_state = "shield"
+	
+	if show_hitbox_debug:
+		print("  🛡️ Shield startup phase - not yet blocking")
+		print("  🎯 Facing direction for blocking: ", current_facing_direction)
+
+func _end_shield():
+	# Can end shield from any state - immediate transition to end state
+	if shield_state == "none":
+		return # Already not shielding
+	
+	print("🛡️ Ending shield from state: ", shield_state, " → end")
+	shield_state = "end"
+	shield_timer = shield_end_duration
+	is_shield_active = false
+
+func _update_shield_state():
+	# Continuous check: if button released during shield start/hold, end immediately
+	# Don't trigger if already ending to prevent endless loop
+	if is_shielding and shield_state != "end" and not Input.is_action_pressed("secondary_attack"):
+		_end_shield()
+		return
+	
+	match shield_state:
+		"start":
+			if shield_timer <= 0:
+				print("🛡️ Shield transition: start → hold")
+				shield_state = "hold"
+				is_shield_active = true
+				print("🛡️ Shield active - can block attacks from front (90° arc)")
+				if show_hitbox_debug:
+					print("  🎯 Blocking direction: ", current_facing_direction)
+		"end":
+			if shield_timer <= 0:
+				print("🛡️ Shield transition: end → none (shield fully lowered)")
+				shield_state = "none"
+				is_shielding = false
+				is_shield_active = false
+				combat_state = "idle"
+				if show_hitbox_debug:
+					print("  🛡️ Shield completely inactive")
+
+# === HITBOX SYSTEM ===
+
+func _schedule_hitbox_activation(hitbox_type: String, delay: float):
+	# Use a timer to activate hitbox after delay
+	await get_tree().create_timer(delay).timeout
+	_activate_hitbox(hitbox_type)
+
+func _activate_hitbox(hitbox_type: String):
+	hitbox_active = true
+	
+	if hitbox_type == "melee":
+		melee_hitbox.monitoring = true
+		print("⚔️ Melee hitbox activated")
+		# Deactivate after duration
+		await get_tree().create_timer(hitbox_active_duration).timeout
+		melee_hitbox.monitoring = false
+		print("⚔️ Melee hitbox deactivated")
+	elif hitbox_type == "ability":
+		ability_hitbox.monitoring = true
+		print("✨ Ability hitbox activated")
+		# Abilities have longer duration
+		await get_tree().create_timer(hitbox_active_duration * 2).timeout
+		ability_hitbox.monitoring = false
+		print("✨ Ability hitbox deactivated")
+
+func _update_hitbox_positions():
+	# Update melee hitbox position based on facing direction
+	var offset_distance = 30
+	melee_hitbox.position = current_facing_direction * offset_distance
+	melee_hitbox.rotation = current_facing_direction.angle()
+
+func _handle_hitbox_timing(delta):
+	# This function can be expanded for frame-based hitbox timing
+	# For now, we use timer-based activation
+	pass
+
+# === BLOCKING SYSTEM ===
+
+func can_block_attack(attack_dir: Vector2) -> bool:
+	if not is_shield_active:
+		if show_hitbox_debug:
+			print("🚫 Block failed: Shield not active (state: ", shield_state, ")")
+		return false
+	
+	# Normalize attack direction to ensure consistent calculations
+	var normalized_attack_dir = attack_dir.normalized()
+	var normalized_facing_dir = current_facing_direction.normalized()
+	
+	# Calculate dot product to determine if attack is from front
+	# Dot product > 0 means attack is coming from the front hemisphere
+	var dot_product = normalized_attack_dir.dot(-normalized_facing_dir)
+	
+	# Can block if attack is coming from roughly frontal directions
+	# dot_product > 0.0 means within 90 degrees of facing direction
+	var can_block = dot_product > 0.0
+	
+	if show_hitbox_debug:
+		var angle_degrees = rad_to_deg(acos(abs(dot_product)))
+		print("🛡️ Block check: angle=%.1f°, dot=%.2f, can_block=%s" % [angle_degrees, dot_product, can_block])
+	
+	return can_block
+
+# === HITBOX COLLISION HANDLERS ===
+
+func _on_melee_hitbox_entered(area: Area2D):
+	print("💥 Melee hit area: ", area.name)
+	_handle_combat_hit(area, "melee")
+
+func _on_melee_hitbox_body_entered(body: Node2D):
+	print("💥 Melee hit body: ", body.name)
+	_handle_combat_hit(body, "melee")
+
+func _on_ability_hitbox_entered(area: Area2D):
+	print("💥 Ability hit area: ", area.name)
+	_handle_combat_hit(area, "ability")
+
+func _on_ability_hitbox_body_entered(body: Node2D):
+	print("💥 Ability hit body: ", body.name)
+	_handle_combat_hit(body, "ability")
+
+func _handle_combat_hit(target: Node, attack_type: String):
+	# Prevent self-damage - player cannot hit themselves or their child nodes
+	if target == self:
+		print("🚫 Prevented self-damage from ", attack_type, " attack")
+		return
+	
+	# Check if target is a child of the player (part of player entity)
+	if is_ancestor_of(target):
+		print("🚫 Prevented self-damage - target is part of player entity (", target.name, ")")
+		return
+	
+	# Calculate attack direction from attacker to target
+	var calculated_attack_direction = attack_direction
+	if target.has_method("global_position"):
+		calculated_attack_direction = (target.global_position - global_position).normalized()
+	
+	# Debug attack information
+	if show_hitbox_debug:
+		print("🎯 ", attack_type.to_upper(), " attack: ", name, " → ", target.name)
+		print("  Attack direction: ", calculated_attack_direction)
+		print("  Attacker facing: ", current_facing_direction)
+	
+	# Check if target can block the attack
+	if target.has_method("can_block_attack"):
+		if target.can_block_attack(calculated_attack_direction):
+			print("🛡️ Attack blocked by ", target.name)
+			_trigger_block_effects(target, attack_type)
+			return
+	
+	# Apply damage or effects
+	if target.has_method("take_damage"):
+		var damage = _calculate_damage(attack_type)
+		target.take_damage(damage, calculated_attack_direction)
+		print("⚔️ Dealt ", damage, " damage to ", target.name)
+		_trigger_hit_effects(target, attack_type, damage)
+	else:
+		print("⚠️ Target ", target.name, " cannot take damage")
+
+func _calculate_damage(attack_type: String) -> int:
+	match attack_type:
+		"melee":
+			# Scale melee damage by combo count
+			var base_damage = 10
+			var combo_multiplier = 1.0 + (melee_combo_count - 1) * 0.2 # +20% per combo hit
+			return int(base_damage * combo_multiplier)
+		"ability":
+			return 20
+		_:
+			return 10
+
+func _trigger_block_effects(target: Node, attack_type: String):
+	# Add visual/audio feedback for successful blocks
+	print("🛡️ Block successful! ", attack_type.to_upper(), " attack deflected")
+	
+	# TODO: Add particle effects, sound effects, screen shake for blocks
+	# Could add a "block particle" effect at the target's position
+	# Could add a metallic clang sound effect
+	# Could add slight screen shake for dramatic effect
+
+func _trigger_hit_effects(target: Node, attack_type: String, damage: int):
+	# Add visual/audio feedback for successful hits
+	if show_hitbox_debug:
+		print("💥 Hit confirmed! ", damage, " damage dealt via ", attack_type)
+	
+	# TODO: Add particle effects, sound effects, screen shake for hits
+	# Could add blood/impact particles at hit location
+	# Could add hit sound effects
+	# Could add screen shake proportional to damage
 
 func _handle_mouse_input():
 	# Get mouse position relative to player
@@ -127,6 +749,11 @@ func _handle_mouse_input():
 		is_turning_180 = false
 
 func _handle_movement_input(delta):
+	# Restrict movement during combat actions
+	if _should_restrict_movement():
+		_apply_movement_restrictions()
+		return
+	
 	# Get WASD input
 	var input_vector = Vector2.ZERO
 	input_vector.x = Input.get_axis("move_left", "move_right")
@@ -155,11 +782,14 @@ func _handle_movement_input(delta):
 			_complete_180_turn()
 
 func _handle_movement_physics(delta):
-	if is_moving:
-		# Calculate movement speed based on movement type
+	# Apply movement restrictions during combat
+	var movement_modifier = _get_combat_movement_modifier()
+	
+	if is_moving and movement_modifier > 0:
+		# Calculate movement speed based on movement type and combat restrictions
 		var movement_type = _get_movement_type(current_facing_direction, current_movement_direction)
 		var speed_modifier = _get_speed_modifier(movement_type)
-		var effective_speed = move_speed * speed_modifier
+		var effective_speed = move_speed * speed_modifier * movement_modifier
 		
 		# Accelerate towards target velocity with modified speed
 		var target_velocity = current_movement_direction * effective_speed
@@ -183,6 +813,39 @@ func _handle_movement_physics(delta):
 		for i in get_slide_collision_count():
 			var collision = get_slide_collision(i)
 			print("Collided with: ", collision.get_collider().name if collision.get_collider().has_method("name") else "Unknown")
+
+# ===== MOVEMENT RESTRICTION SYSTEM =====
+
+func _should_restrict_movement() -> bool:
+	# Check if player is in a combat state that should restrict movement
+	return is_attacking or is_using_ability or is_shielding or is_taking_damage or is_dead
+
+func _apply_movement_restrictions():
+	# Force stop movement during restricted combat actions
+	current_movement_direction = Vector2.ZERO
+	is_moving = false
+	
+	# Apply stronger friction to stop player quickly
+	var enhanced_friction = friction * 2.0
+	
+	# Debug output when movement is restricted (only once per restriction)
+	if not get_meta("movement_restricted", false):
+		set_meta("movement_restricted", true)
+		if is_shielding:
+			print("🛡️ Movement locked while shielding")
+		else:
+			print("🚫 Movement locked during combat action")
+
+func _get_combat_movement_modifier() -> float:
+	# Return movement speed multiplier based on combat state
+	if is_attacking or is_using_ability or is_shielding or is_taking_damage or is_dead:
+		return 0.0 # No movement during any combat action or damage/death
+	else:
+		# Clear restriction flag when movement is unrestricted
+		if get_meta("movement_restricted", false):
+			set_meta("movement_restricted", false)
+			print("✅ Movement unrestricted")
+		return 1.0 # Normal movement when not in combat
 
 func _start_180_turn(new_direction: Vector2):
 	is_turning_180 = true
@@ -366,9 +1029,46 @@ func _safety_checks():
 	if is_rolling and roll_timer > roll_duration + 1.0: # Give 1 second grace period
 		print("🔧 Safety reset: Rolling state stuck - forcing completion")
 		_complete_roll()
+	
+	# Safety timeout for melee attacks (prevent infinite attacking)
+	if is_attacking and melee_attack_timer > melee_attack_duration + 1.0:
+		print("🔧 Safety reset: Melee attack stuck - forcing completion")
+		_complete_melee_attack()
+	
+	# Safety timeout for abilities (prevent infinite ability state)
+	if is_using_ability and ability_timer > ability_duration + 1.0:
+		print("🔧 Safety reset: Ability stuck - forcing completion")
+		_complete_ability()
+	
+	# Safety timeout for shield states (prevent getting stuck in shield transitions)
+	if shield_state == "start" and shield_timer > shield_start_duration + 1.0:
+		print("🔧 Safety reset: Shield start stuck - forcing to hold state")
+		shield_state = "hold"
+		is_shield_active = true
+		shield_timer = 0.0
+	elif shield_state == "end" and shield_timer > shield_end_duration + 1.0:
+		print("🔧 Safety reset: Shield end stuck - forcing completion")
+		shield_state = "none"
+		is_shielding = false
+		combat_state = "idle"
+	
+	# Safety timeout for damage state (prevent infinite damage animation)
+	if is_taking_damage and damage_timer > damage_animation_duration + 1.0:
+		print("🔧 Safety reset: Damage animation stuck - forcing completion")
+		_complete_damage_animation()
+	
+	# Safety timeout for death state (prevent infinite death animation)
+	if is_dead and death_timer > death_animation_duration + 1.0:
+		print("🔧 Safety reset: Death animation stuck - showing game over")
+		_complete_death_animation()
+	
+	# Safety reset for combat state consistency
+	if combat_state != "idle" and not is_attacking and not is_using_ability and not is_shielding and not is_taking_damage and not is_dead:
+		print("🔧 Safety reset: Combat state inconsistent - resetting to idle")
+		combat_state = "idle"
 
 func _update_animation():
-	# Handle rolling animations first (highest priority)
+	# Handle combat animations first (highest priority after rolling)
 	if is_rolling:
 		var roll_direction_name = _get_direction_name(roll_direction)
 		var roll_animation = "face_" + roll_direction_name + "_roll"
@@ -385,6 +1085,20 @@ func _update_animation():
 			if animated_sprite.sprite_frames.has_animation(fallback_animation):
 				current_animation = fallback_animation
 				animated_sprite.play(fallback_animation)
+		return
+	
+	# Handle combat animations (high priority)
+	if combat_state != "idle":
+		var facing_name = _get_direction_name(current_facing_direction)
+		var combat_animation = _get_combat_animation(facing_name)
+		
+		if combat_animation != "" and animated_sprite.sprite_frames.has_animation(combat_animation):
+			if current_animation != combat_animation:
+				current_animation = combat_animation
+				animated_sprite.play(combat_animation)
+				print("🎬 Playing combat animation: ", combat_animation)
+		else:
+			print("⚠️ Combat animation not found: ", combat_animation)
 		return
 	
 	# 180° turns disabled - no need to check is_turning_180
@@ -437,6 +1151,30 @@ func _update_animation():
 	
 	# Update movement state tracking
 	last_movement_state = is_moving
+
+func _get_combat_animation(facing_name: String) -> String:
+	match combat_state:
+		"melee":
+			return "face_" + facing_name + "_melee_" + str(melee_combo_count)
+		"ability":
+			if current_ability == "q":
+				return "face_" + facing_name + "_ability_1"
+			elif current_ability == "r":
+				return "face_" + facing_name + "_ability_2"
+		"shield":
+			match shield_state:
+				"start":
+					return "face_" + facing_name + "_shield_start"
+				"hold":
+					return "face_" + facing_name + "_shield_hold"
+				"end":
+					return "face_" + facing_name + "_shield_end"
+		"take_damage":
+			return "face_" + facing_name + "_take_damage"
+		"death":
+			return "face_" + facing_name + "_death"
+	
+	return ""
 
 # Handle animation smoothing to prevent jitteriness
 func _handle_animation_smoothing(delta):
@@ -669,5 +1407,430 @@ func _get_debug_info() -> String:
 	if is_moving:
 		var movement_type = _get_movement_type(current_facing_direction, current_movement_direction)
 		var speed_mod = _get_speed_modifier(movement_type)
-		speed_info = " | Speed: %.0f%%" % (speed_mod * 100)
-	return "Facing: %s | Moving: %s | Animation: %s%s" % [facing_name, movement_name, current_animation, speed_info]
+		var combat_mod = _get_combat_movement_modifier()
+		var final_speed = speed_mod * combat_mod * 100
+		speed_info = " | Speed: %.0f%%" % final_speed
+		
+		# Add movement restriction info
+		if combat_mod == 0.0:
+			speed_info += " (LOCKED)"
+	
+	# Add health info
+	var health_info = " | HP: %d/%d" % [current_health, max_health]
+	if is_dead:
+		health_info += " (DEAD)"
+	elif is_taking_damage:
+		health_info += " (HURT)"
+	
+	# Add combat info
+	var combat_info = ""
+	if combat_state != "idle":
+		combat_info += " | Combat: " + combat_state
+		if combat_state == "melee":
+			combat_info += " (" + str(melee_combo_count) + "/" + str(max_melee_combo) + ")"
+		elif combat_state == "ability":
+			combat_info += " (" + current_ability.to_upper() + ")"
+		elif combat_state == "shield":
+			combat_info += " (" + shield_state + ")"
+	
+	# Add cooldown info
+	var cooldown_info = ""
+	if q_ability_cooldown_timer > 0:
+		cooldown_info += " | Q: %.1fs" % q_ability_cooldown_timer
+	if r_ability_cooldown_timer > 0:
+		cooldown_info += " | R: %.1fs" % r_ability_cooldown_timer
+	
+	return "Facing: %s | Moving: %s | Animation: %s%s%s%s%s" % [facing_name, movement_name, current_animation, speed_info, health_info, combat_info, cooldown_info]
+
+# Get combat system status for UI/debugging
+func get_combat_status() -> Dictionary:
+	return {
+		"combat_state": combat_state,
+		"melee_combo": str(melee_combo_count) + "/" + str(max_melee_combo),
+		"melee_combo_timer": melee_combo_timer,
+		"q_cooldown": q_ability_cooldown_timer,
+		"r_cooldown": r_ability_cooldown_timer,
+		"shield_state": shield_state,
+		"is_shield_active": is_shield_active,
+		"is_attacking": is_attacking,
+		"is_using_ability": is_using_ability,
+		"attack_direction": _get_direction_name(attack_direction) if attack_direction != Vector2.ZERO else "none",
+		"current_health": current_health,
+		"max_health": max_health,
+		"is_taking_damage": is_taking_damage,
+		"is_dead": is_dead
+	}
+
+# ===== DEBUG VISUALIZATION =====
+
+func _update_debug_visualization():
+	if show_hitbox_debug:
+		_draw_hitbox_debug()
+
+func _draw_hitbox_debug():
+	# Clear previous debug lines
+	for line in debug_hitbox_lines:
+		if is_instance_valid(line):
+			line.queue_free()
+	debug_hitbox_lines.clear()
+	
+	# Draw melee hitbox when attacking
+	if melee_hitbox and is_attacking:
+		_draw_rect_debug(melee_hitbox.global_position, Vector2(60, 40), Color.GREEN, "Player Melee")
+	
+	# Draw ability hitbox when using abilities
+	if ability_hitbox and is_using_ability:
+		_draw_circle_debug(ability_hitbox.global_position, 80, Color.BLUE, "Player Ability")
+
+func _draw_circle_debug(pos: Vector2, radius: float, color: Color, label: String):
+	var line = Line2D.new()
+	line.width = 2.0
+	line.default_color = color
+	
+	# Create circle points
+	var points = []
+	var segments = 32
+	for i in range(segments + 1):
+		var angle = i * 2 * PI / segments
+		var point = pos + Vector2(cos(angle), sin(angle)) * radius
+		points.append(point)
+	
+	line.points = PackedVector2Array(points)
+	get_parent().add_child(line)
+	debug_hitbox_lines.append(line)
+	
+	# Add label
+	var label_node = Label.new()
+	label_node.text = label
+	label_node.position = pos + Vector2(-30, -radius - 20)
+	label_node.add_theme_color_override("font_color", color)
+	label_node.add_theme_font_size_override("font_size", 10)
+	get_parent().add_child(label_node)
+	debug_hitbox_lines.append(label_node)
+
+func _draw_rect_debug(pos: Vector2, size: Vector2, color: Color, label: String):
+	var line = Line2D.new()
+	line.width = 2.0
+	line.default_color = color
+	
+	# Create rectangle points
+	var half_size = size / 2
+	var points = [
+		pos + Vector2(-half_size.x, -half_size.y),
+		pos + Vector2(half_size.x, -half_size.y),
+		pos + Vector2(half_size.x, half_size.y),
+		pos + Vector2(-half_size.x, half_size.y),
+		pos + Vector2(-half_size.x, -half_size.y) # Close the rectangle
+	]
+	
+	line.points = PackedVector2Array(points)
+	get_parent().add_child(line)
+	debug_hitbox_lines.append(line)
+	
+	# Add label
+	var label_node = Label.new()
+	label_node.text = label
+	label_node.position = pos + Vector2(-30, -half_size.y - 20)
+	label_node.add_theme_color_override("font_color", color)
+	label_node.add_theme_font_size_override("font_size", 10)
+	get_parent().add_child(label_node)
+	debug_hitbox_lines.append(label_node)
+
+# ===== TESTING FUNCTIONS (for development) =====
+
+# Test function to simulate taking damage - call this to test the damage system
+func test_take_damage(amount: int = 20):
+	print("🧪 Testing damage system with ", amount, " damage")
+	take_damage(amount)
+
+# Test function to instantly kill player - call this to test death system  
+func test_death():
+	print("🧪 Testing death system")
+	take_damage(current_health)
+
+# Test function to heal player
+func test_heal(amount: int = 50):
+	if is_dead:
+		print("🧪 Cannot heal - player is dead")
+		return
+	
+	print("🧪 Testing heal for ", amount, " HP")
+	current_health = min(max_health, current_health + amount)
+	print("💚 Player healed to ", current_health, "/", max_health, " HP")
+
+# Test function to verify blocking system
+func test_blocking():
+	print("🧪 Testing blocking system")
+	
+	# Test shield activation
+	if _can_start_shield():
+		_start_shield()
+		print("  ✅ Shield activated successfully")
+		
+		# Wait for shield to become active
+		await get_tree().create_timer(0.4).timeout
+		
+		if is_shield_active:
+			print("  ✅ Shield is active and can block")
+			
+			# Test blocking from different directions
+			var test_directions = [
+				Vector2.RIGHT, # Front
+				Vector2.LEFT, # Back
+				Vector2.UP, # Side
+				Vector2.DOWN # Side
+			]
+			
+			for dir in test_directions:
+				var can_block = can_block_attack(dir)
+				var angle = rad_to_deg(acos(abs(dir.dot(-current_facing_direction))))
+				print("  🎯 Attack from ", dir, " (%.1f°): %s" % [angle, "BLOCKED" if can_block else "HIT"])
+		else:
+			print("  ❌ Shield not active after startup")
+		
+		# End shield test
+		_end_shield()
+		print("  ✅ Shield deactivated")
+	else:
+		print("  ❌ Cannot activate shield")
+
+# Test function to simulate an attack against this entity
+func test_receive_attack(attack_dir: Vector2 = Vector2.RIGHT, damage: int = 10):
+	print("🧪 Testing receive attack from direction: ", attack_dir)
+	
+	# Store original attack direction
+	var original_attack_dir = attack_direction
+	attack_direction = attack_dir.normalized()
+	
+	# Simulate the hit
+	_handle_combat_hit(self, "test")
+	
+	# Restore original attack direction
+	attack_direction = original_attack_dir
+
+# Test function to verify roll invincibility
+func test_roll_invincibility():
+	print("🧪 Testing roll invincibility frames")
+	
+	var original_health = current_health
+	print("  💚 Starting health: ", original_health)
+	
+	# Start rolling
+	_start_roll()
+	print("  🎯 Roll started - should be invincible")
+	
+	# Try to take damage during roll
+	take_damage(20)
+	
+	if current_health == original_health:
+		print("  ✅ Roll invincibility working - no damage taken")
+	else:
+		print("  ❌ Roll invincibility failed - took damage during roll")
+	
+	# Wait for roll to complete
+	await get_tree().create_timer(roll_duration + 0.1).timeout
+	
+	# Try to take damage after roll
+	take_damage(5)
+	
+	if current_health == original_health - 5:
+		print("  ✅ Post-roll damage working - took expected damage")
+	else:
+		print("  ⚠️ Post-roll damage unexpected - health: ", current_health)
+	
+	# Restore health
+	current_health = original_health
+	print("  🔄 Health restored for continued testing")
+
+# ===== PARTICLE EFFECTS SYSTEM =====
+
+func _schedule_particle_effect(effect_type: String, delay: float):
+	if not particles_enabled:
+		return
+	
+	# Use a timer to activate particles after delay
+	await get_tree().create_timer(delay).timeout
+	_trigger_particle_effect(effect_type)
+
+func _trigger_particle_effect(effect_type: String):
+	match effect_type:
+		"whirlwind":
+			if whirlwind_particles:
+				whirlwind_particles.restart()
+				whirlwind_particles.emitting = true
+				print("🌪️ Whirlwind particles triggered")
+				# Stop particles after their lifetime
+				await get_tree().create_timer(whirlwind_particles.lifetime).timeout
+				whirlwind_particles.emitting = false
+		"shockwave":
+			if shockwave_particles:
+				shockwave_particles.restart()
+				shockwave_particles.emitting = true
+				print("💥 Shockwave particles triggered")
+				# Stop particles after their lifetime
+				await get_tree().create_timer(shockwave_particles.lifetime).timeout
+				shockwave_particles.emitting = false
+
+# ===== HEALTH AND DAMAGE SYSTEM =====
+
+func take_damage(amount: int, attack_direction: Vector2 = Vector2.ZERO):
+	# Don't take damage if already dead, currently taking damage, or during invincibility frames
+	if is_dead or is_taking_damage:
+		return
+	
+	# Rolling provides invincibility frames - cannot take damage while rolling
+	if is_rolling:
+		if show_hitbox_debug:
+			print("🛡️ Damage blocked - invincibility frames during roll")
+		return
+	
+	print("💔 Player taking ", amount, " damage")
+	current_health -= amount
+	
+	# Clamp health to minimum 0
+	current_health = max(0, current_health)
+	
+	if current_health <= 0:
+		_start_death()
+	else:
+		_start_damage_animation()
+	
+	# Trigger damage flash effect
+	_trigger_damage_flash()
+
+func _start_damage_animation():
+	print("😵 Starting damage animation")
+	is_taking_damage = true
+	combat_state = "take_damage"
+	damage_timer = damage_animation_duration
+
+func _complete_damage_animation():
+	print("✅ Damage animation complete")
+	is_taking_damage = false
+	combat_state = "idle"
+
+func _start_death():
+	print("💀 Player death initiated")
+	is_dead = true
+	is_taking_damage = false
+	combat_state = "death"
+	death_timer = death_animation_duration
+	
+	# Emit death signal for game controller
+	player_died.emit()
+
+func _complete_death_animation():
+	print("💀 Death animation complete - showing game over")
+	_show_game_over()
+
+func _trigger_damage_flash():
+	if not damage_flash:
+		return
+	
+	# Stop any existing tween
+	if flash_tween:
+		flash_tween.kill()
+	
+	# Create new tween for flash effect
+	flash_tween = create_tween()
+	
+	# Set initial flash color with full intensity
+	damage_flash.color = Color(1, 0, 0, damage_flash_intensity)
+	
+	# Fade out the flash
+	flash_tween.tween_property(damage_flash, "color:a", 0.0, damage_flash_duration)
+	flash_tween.set_ease(Tween.EASE_OUT)
+	flash_tween.set_trans(Tween.TRANS_CUBIC)
+
+func _show_game_over():
+	if game_over_ui:
+		game_over_ui.visible = true
+		print("🎮 Game Over screen displayed")
+
+func _restart_game():
+	print("🔄 Restarting game...")
+	
+	# Reset player state
+	current_health = max_health
+	is_dead = false
+	is_taking_damage = false
+	combat_state = "idle"
+	
+	# Hide game over UI
+	if game_over_ui:
+		game_over_ui.visible = false
+	
+	# Reset any active combat states
+	_reset_all_combat_states()
+	
+	# Reload the current scene
+	get_tree().reload_current_scene()
+
+func _reset_all_combat_states():
+	# Reset all combat-related states
+	is_attacking = false
+	is_using_ability = false
+	is_shielding = false
+	shield_state = "none"
+	melee_combo_count = 0
+	can_melee_attack = true
+	
+	# Reset timers
+	melee_attack_timer = 0.0
+	ability_timer = 0.0
+	shield_timer = 0.0
+	damage_timer = 0.0
+	death_timer = 0.0
+	
+	print("🔄 All combat states reset")
+
+# ===== DEBUG UI FUNCTIONS =====
+
+# Optional debug UI setup - only works if debug nodes exist
+func _setup_debug_ui():
+	# Check if debug UI nodes exist (optional, won't error if missing)
+	var debug_panel = get_node_or_null("CombatDebugUI/DebugPanel")
+	if debug_panel:
+		print("🐛 Combat debug UI found and connected")
+
+# Update debug UI if it exists
+func _update_debug_ui():
+	var combat_state_label = get_node_or_null("CombatDebugUI/DebugPanel/VBox/CombatState")
+	var melee_info_label = get_node_or_null("CombatDebugUI/DebugPanel/VBox/MeleeInfo")
+	var ability_cooldowns_label = get_node_or_null("CombatDebugUI/DebugPanel/VBox/AbilityCooldowns")
+	var shield_info_label = get_node_or_null("CombatDebugUI/DebugPanel/VBox/ShieldInfo")
+	
+	if combat_state_label:
+		combat_state_label.text = "State: " + combat_state
+		# Color code the state
+		match combat_state:
+			"idle":
+				combat_state_label.modulate = Color.WHITE
+			"melee":
+				combat_state_label.modulate = Color.RED
+			"ability":
+				combat_state_label.modulate = Color.CYAN
+			"shield":
+				combat_state_label.modulate = Color.YELLOW
+	
+	if melee_info_label:
+		var combo_text = "Melee: " + str(melee_combo_count) + "/" + str(max_melee_combo)
+		if melee_combo_timer > 0:
+			combo_text += " (%.1fs)" % melee_combo_timer
+		melee_info_label.text = combo_text
+	
+	if ability_cooldowns_label:
+		var q_text = "Ready" if q_ability_cooldown_timer <= 0 else "%.1fs" % q_ability_cooldown_timer
+		var r_text = "Ready" if r_ability_cooldown_timer <= 0 else "%.1fs" % r_ability_cooldown_timer
+		ability_cooldowns_label.text = "Q: " + q_text + " | R: " + r_text
+	
+	if shield_info_label:
+		var shield_text = "Shield: " + shield_state
+		if is_shield_active:
+			shield_text += " (ACTIVE)"
+		shield_info_label.text = shield_text
+		# Color code shield state
+		if is_shield_active:
+			shield_info_label.modulate = Color.GREEN
+		else:
+			shield_info_label.modulate = Color.WHITE
