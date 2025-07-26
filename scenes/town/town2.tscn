@@ -1,0 +1,49 @@
+[gd_scene load_steps=6 format=3 uid="uid://d2laljqtq8ygc"]
+
+[ext_resource type="Script" path="res://systems/town/TownSetup.gd" id="1_4jwpt"]
+[ext_resource type="TileSet" uid="uid://c1234568aa0" path="res://scenes/town/town_tileset.tres" id="2_g7fkq"]
+[ext_resource type="Texture2D" uid="uid://cn3tenlx25pwa" path="res://art/splash/ChatGPT Image Jul 25, 2025, 04_22_34 PM.png" id="3_ajlv2"]
+[ext_resource type="PackedScene" path="res://scenes/town/Collider.tscn" id="4_8upx8"]
+[ext_resource type="PackedScene" uid="uid://bwd0k3vdhvqyc" path="res://scenes/player/Player.tscn" id="5_ix0wp"]
+
+[node name="Town" type="Node2D"]
+script = ExtResource("1_4jwpt")
+
+[node name="ChatGptImageJul25,2025,042234Pm" type="Sprite2D" parent="."]
+position = Vector2(-45, 40)
+texture = ExtResource("3_ajlv2")
+
+[node name="TileMap" type="TileMap" parent="."]
+visible = false
+position = Vector2(-6, -1)
+tile_set = ExtResource("2_g7fkq")
+format = 2
+layer_0/tile_data = PackedInt32Array(-131072, 7, 0, -65536, 7, 0, -65535, 7, 0, 1, 7, 0, 65537, 7, 0, 131072, 7, 0, 196607, 7, 0, 131073, 7, 0, 65536, 7, 0, 262143, 7, 0, 196608, 7, 0, 262144, 7, 0, 262145, 7, 0, 196609, 7, 0, 327681, 7, 0, 393217, 7, 0, 458753, 7, 0, 458752, 7, 0, 524288, 7, 0, 589823, 7, 0, 655358, 7, 0, 720893, 7, 0, 720892, 7, 0, 655357, 7, 0, 720891, 7, 0, 786427, 7, 0, 786426, 7, 0, 851962, 7, 0, 851963, 7, 0, 917500, 7, 0, 851964, 7, 0, 917501, 7, 0, 983038, 7, 0, 1048575, 7, 0, 1048576, 7, 0, 1114111, 7, 0, 1114110, 7, 0, 1179646, 7, 0, 1179647, 7, 0, 1114112, 7, 0, 1179645, 7, 0, 1179644, 7, 0, 1179643, 7, 0, 1179642, 7, 0, 1114106, 7, 0, 1048570, 7, 0, 1048571, 7, 0, 1114107, 7, 0, 983033, 7, 0, 917496, 7, 0, 851959, 7, 0, 786423, 7, 0, 720887, 7, 0, 655351, 7, 0, 655352, 7, 0, 589817, 7, 0, 524282, 7, 0, 589818, 7, 0, 524283, 7, 0, 458748, 7, 0, 458749, 7, 0, 524284, 7, 0, 393213, 7, 0, 327676, 7, 0, 262139, 7, 0, 196603, 7, 0, 131068, 7, 0, 65533, 7, 0, -65540, 7, 0, -4, 7, 0, -65539, 7, 0, -131075, 7, 0, -196612, 7, 0, -262148, 7, 0, -327684, 7, 0, -393221, 7, 0, -458757, 7, 0, -393220, 7, 0, -458756, 7, 0, -524292, 7, 0, -524293, 7, 0, -589828, 7, 0, -655364, 7, 0, -655363, 7, 0, -655362, 7, 0, -589826, 7, 0, -524290, 7, 0, -524289, 7, 0, -458753, 7, 0, -393217, 7, 0, -327681, 7, 0, -262145, 7, 0, -262144, 7, 0, -196608, 7, 0)
+
+[node name="Colliders" type="Node2D" parent="."]
+position = Vector2(-7, -2)
+
+[node name="NorthWall" parent="Colliders" instance=ExtResource("4_8upx8")]
+position = Vector2(76, -193)
+scale = Vector2(5, 5)
+collider_size = Vector2(400, 32)
+visible_in_game = true
+
+[node name="SouthWall" parent="Colliders" instance=ExtResource("4_8upx8")]
+position = Vector2(0, 200)
+collider_size = Vector2(400, 32)
+
+[node name="EastWall" parent="Colliders" instance=ExtResource("4_8upx8")]
+position = Vector2(200, 0)
+collider_size = Vector2(32, 400)
+
+[node name="WestWall" parent="Colliders" instance=ExtResource("4_8upx8")]
+position = Vector2(-200, 0)
+collider_size = Vector2(32, 400)
+
+[node name="CenterObstacle" parent="Colliders" instance=ExtResource("4_8upx8")]
+collider_size = Vector2(64, 64)
+debug_color = Color(0, 0, 1, 1)
+
+[node name="Player" parent="." instance=ExtResource("5_ix0wp")]
+position = Vector2(-43, -90)

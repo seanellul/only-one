@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dqj20g66nhva"
+path="res://.godot/imported/Action 2.mp3-7f607c3646754056bfd78929e1817bf4.mp3str"
+
+[deps]
+
+source_file="res://audio/music/Action 2.mp3"
+dest_files=["res://.godot/imported/Action 2.mp3-7f607c3646754056bfd78929e1817bf4.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

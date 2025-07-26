@@ -1,0 +1,63 @@
+[gd_resource type="TileSet" load_steps=17 format=3 uid="uid://c1234568aa0"]
+
+[ext_resource type="Texture2D" uid="uid://lcq1k11c1eqb" path="res://art/tilesheets/tiles/grass_0.png" id="1"]
+[ext_resource type="Texture2D" uid="uid://bv37fvq8d86ab" path="res://art/tilesheets/tiles/grass_1.png" id="2"]
+[ext_resource type="Texture2D" uid="uid://ckl4grsmfxqg1" path="res://art/tilesheets/tiles/grass_2.png" id="3"]
+[ext_resource type="Texture2D" uid="uid://8snlgpvna0rn" path="res://art/tilesheets/tiles/grass_3.png" id="4"]
+[ext_resource type="Texture2D" uid="uid://p51pxfxayf8l" path="res://art/tilesheets/tiles/village/grass_a.png" id="5"]
+[ext_resource type="Texture2D" uid="uid://qmj1htyogllx" path="res://art/tilesheets/tiles/village/grass_b.png" id="6"]
+[ext_resource type="Texture2D" uid="uid://bm5rj3qo21wor" path="res://art/tilesheets/tiles/village/cobblestone_road.png" id="7"]
+[ext_resource type="Texture2D" uid="uid://b4wxcdah22jkq" path="res://art/tilesheets/tiles/village/building_wall.png" id="8"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_1"]
+texture = ExtResource("1")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_2"]
+texture = ExtResource("2")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_3"]
+texture = ExtResource("3")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_4"]
+texture = ExtResource("4")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_5"]
+texture = ExtResource("5")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_6"]
+texture = ExtResource("6")
+texture_region_size = Vector2i(256, 256)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_7"]
+texture = ExtResource("7")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8"]
+texture = ExtResource("8")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[resource]
+tile_size = Vector2i(32, 32)
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_1")
+sources/1 = SubResource("TileSetAtlasSource_2")
+sources/2 = SubResource("TileSetAtlasSource_3")
+sources/3 = SubResource("TileSetAtlasSource_4")
+sources/4 = SubResource("TileSetAtlasSource_5")
+sources/5 = SubResource("TileSetAtlasSource_6")
+sources/6 = SubResource("TileSetAtlasSource_7")
+sources/7 = SubResource("TileSetAtlasSource_8")
