@@ -6,6 +6,7 @@ class_name CombatDebugUI
 @onready var ability_cooldowns_label: Label = $DebugPanel/VBox/AbilityCooldowns
 @onready var shield_info_label: Label = $DebugPanel/VBox/ShieldInfo
 @onready var health_info_label: Label = $DebugPanel/VBox/HealthInfo
+@onready var hitbox_info_label: Label = $DebugPanel/VBox/HitboxInfo
 
 var player_controller: PlayerController
 
@@ -89,3 +90,21 @@ func _update_combat_status():
 			health_info_label.modulate = Color.YELLOW
 		else:
 			health_info_label.modulate = Color.GREEN
+	
+	# Update hitbox info
+	if hitbox_info_label and status.has("hitbox_info"):
+		var hitbox_info = status.hitbox_info
+		var hitbox_text = "Hitboxes: "
+		
+		# Show active hitbox information
+		if status.is_attacking and hitbox_info.melee_active:
+			hitbox_text += "Melee(%s)" % [hitbox_info.melee_size]
+			hitbox_info_label.modulate = Color.RED
+		elif status.is_using_ability and hitbox_info.ability_active:
+			hitbox_text += "Ability(r=%.1f)" % [hitbox_info.ability_radius]
+			hitbox_info_label.modulate = Color.CYAN
+		else:
+			hitbox_text += "M:%s A:r%.1f" % [hitbox_info.configured_melee_size, hitbox_info.configured_ability_radius]
+			hitbox_info_label.modulate = Color.WHITE
+		
+		hitbox_info_label.text = hitbox_text

@@ -119,6 +119,12 @@ var attack_direction: Vector2 = Vector2.ZERO # Direction of current attack (for 
 @export var hitbox_activation_delay: float = 0.3 # Time after animation start to activate hitbox
 @export var hitbox_active_duration: float = 0.2 # How long hitbox stays active
 
+# ===== HITBOX CONFIGURATION =====
+@export_group("Hitbox Sizes")
+@export var melee_hitbox_size: Vector2 = Vector2(40, 20) # Configurable melee hitbox size
+@export var melee_hitbox_offset: Vector2 = Vector2(30, 0) # Offset in front of character
+@export var ability_hitbox_radius: float = 40.0 # Configurable ability hitbox radius
+
 # Miss sound detection
 var current_attack_hit_something: bool = false
 var current_hitbox_ability_type: String = "" # Store ability type for miss sound detection
@@ -291,10 +297,10 @@ func _setup_hitboxes():
 	melee_hitbox.name = "MeleeHitbox"
 	var melee_collision = CollisionShape2D.new()
 	var melee_shape = RectangleShape2D.new()
-	melee_shape.size = Vector2(60, 40) # Adjust size as needed
+	melee_shape.size = melee_hitbox_size # Use configurable size
 	melee_collision.shape = melee_shape
 	melee_hitbox.add_child(melee_collision)
-	melee_hitbox.position = Vector2(30, 0) # Offset in front of character
+	melee_hitbox.position = melee_hitbox_offset # Use configurable offset
 	melee_hitbox.monitoring = false
 	melee_hitbox.monitorable = false # Don't let other hitboxes detect this
 	add_child(melee_hitbox)
@@ -304,7 +310,7 @@ func _setup_hitboxes():
 	ability_hitbox.name = "AbilityHitbox"
 	var ability_collision = CollisionShape2D.new()
 	var ability_shape = CircleShape2D.new()
-	ability_shape.radius = 80 # Larger radius for AOE abilities
+	ability_shape.radius = ability_hitbox_radius # Use configurable radius
 	ability_collision.shape = ability_shape
 	ability_hitbox.add_child(ability_collision)
 	ability_hitbox.position = Vector2.ZERO # Centered on character for AOE
@@ -323,6 +329,8 @@ func _setup_hitboxes():
 		print("⚠️ Failed to connect ability hitbox body_entered signal")
 	
 	print("🥊 Hitboxes initialized")
+	print("  Melee hitbox: size=%s, offset=%s" % [melee_hitbox_size, melee_hitbox_offset])
+	print("  Ability hitbox: radius=%.1f" % ability_hitbox_radius)
 
 func _setup_particle_effects():
 	# Create whirlwind particle effect (for 3rd melee attack and Q ability)
@@ -461,7 +469,7 @@ func _update_combat_timers(delta):
 func _update_hitbox_positions():
 	# Update melee hitbox position based on facing direction
 	if melee_hitbox:
-		var offset = current_facing_direction * 30 # Distance in front of character
+		var offset = current_facing_direction * melee_hitbox_offset.x # Use configurable offset
 		melee_hitbox.position = offset
 		melee_hitbox.rotation = current_facing_direction.angle()
 	
@@ -1244,11 +1252,15 @@ func _draw_hitbox_debug():
 	
 	# Draw melee hitbox when attacking
 	if melee_hitbox and is_attacking:
-		_draw_rect_debug(melee_hitbox.global_position, Vector2(60, 40), Color.ORANGE, "Melee Hitbox")
+		var actual_size = get_melee_hitbox_size()
+		var label = "Melee Hitbox: %s" % [actual_size]
+		_draw_rect_debug(melee_hitbox.global_position, actual_size, Color.ORANGE, label)
 	
 	# Draw ability hitbox when using abilities
 	if ability_hitbox and is_using_ability:
-		_draw_circle_debug(ability_hitbox.global_position, 80, Color.CYAN, "Ability Hitbox")
+		var actual_radius = get_ability_hitbox_radius()
+		var label = "Ability Hitbox: r=%.1f" % [actual_radius]
+		_draw_circle_debug(ability_hitbox.global_position, actual_radius, Color.CYAN, label)
 
 func _draw_circle_debug(pos: Vector2, radius: float, color: Color, label: String):
 	var line = Line2D.new()
@@ -1340,5 +1352,76 @@ func get_combat_status() -> Dictionary:
 		"is_dead": is_dead,
 		"current_health": current_health,
 		"max_health": max_health,
-		"combat_state": combat_state
+		"combat_state": combat_state,
+		"melee_combo": str(melee_combo_count) + "/" + str(max_melee_combo),
+		"melee_combo_timer": melee_combo_timer,
+		"q_cooldown": q_ability_cooldown_timer,
+		"r_cooldown": r_ability_cooldown_timer,
+		"shield_state": shield_state,
+		"is_shield_active": is_shield_active,
+		"hitbox_info": get_hitbox_debug_info()
 	}
+
+func get_melee_hitbox_size() -> Vector2:
+	"""Get the actual size of the melee hitbox from its collision shape"""
+	if not melee_hitbox:
+		return Vector2.ZERO
+	
+	var collision_shape = melee_hitbox.get_child(0) as CollisionShape2D
+	if not collision_shape or not collision_shape.shape:
+		return Vector2.ZERO
+	
+	var shape = collision_shape.shape as RectangleShape2D
+	if shape:
+		return shape.size
+	
+	return Vector2.ZERO
+
+func get_ability_hitbox_radius() -> float:
+	"""Get the actual radius of the ability hitbox from its collision shape"""
+	if not ability_hitbox:
+		return 0.0
+	
+	var collision_shape = ability_hitbox.get_child(0) as CollisionShape2D
+	if not collision_shape or not collision_shape.shape:
+		return 0.0
+	
+	var shape = collision_shape.shape as CircleShape2D
+	if shape:
+		return shape.radius
+	
+	return 0.0
+
+func get_hitbox_debug_info() -> Dictionary:
+	"""Get complete hitbox information for debugging"""
+	return {
+		"melee_size": get_melee_hitbox_size(),
+		"melee_position": melee_hitbox.global_position if melee_hitbox else Vector2.ZERO,
+		"melee_active": melee_hitbox.monitoring if melee_hitbox else false,
+		"ability_radius": get_ability_hitbox_radius(),
+		"ability_position": ability_hitbox.global_position if ability_hitbox else Vector2.ZERO,
+		"ability_active": ability_hitbox.monitoring if ability_hitbox else false,
+		"configured_melee_size": melee_hitbox_size,
+		"configured_ability_radius": ability_hitbox_radius
+	}
+
+func print_hitbox_info():
+	"""Print current hitbox information to console for debugging"""
+	var info = get_hitbox_debug_info()
+	print("🥊 === HITBOX DEBUG INFO ===")
+	print("  Melee: size=%s, pos=%s, active=%s" % [info.melee_size, info.melee_position, info.melee_active])
+	print("  Ability: radius=%.1f, pos=%s, active=%s" % [info.ability_radius, info.ability_position, info.ability_active])
+	print("  Configured: melee=%s, ability_radius=%.1f" % [info.configured_melee_size, info.configured_ability_radius])
+	print("  Match: melee=%s, ability=%s" % [
+		info.melee_size == info.configured_melee_size,
+		abs(info.ability_radius - info.configured_ability_radius) < 0.1
+	])
+
+func test_hitbox_debug():
+	"""Test function to enable hitbox debugging and print info"""
+	show_hitbox_debug = true
+	print("🔧 === TESTING HITBOX DEBUG SYSTEM ===")
+	print_hitbox_info()
+	print("✅ Visual hitbox debug enabled - perform attacks to see hitboxes!")
+	print("📱 UI Debug: Check debug panels for real-time hitbox info")
+	print("🎮 To disable: set show_hitbox_debug = false")

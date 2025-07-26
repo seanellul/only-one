@@ -182,9 +182,8 @@ func _on_fade_complete():
 	print("✨ ", difficulty_name, " fade complete")
 	is_fading = false
 	
-	# Optional: Remove from scene after fade completes
-	# Uncomment the line below if you want enemies to disappear completely
-	# queue_free()
+	# Remove from scene after fade completes
+	queue_free()
 
 # ===== ENEMY PHYSICS PROCESS OVERRIDE =====
 
@@ -209,6 +208,7 @@ func _update_ai_debug_ui():
 	var target_label = get_node_or_null("AIDebugUI/DebugPanel/VBox/Target")
 	var health_label = get_node_or_null("AIDebugUI/DebugPanel/VBox/Health")
 	var aggression_label = get_node_or_null("AIDebugUI/DebugPanel/VBox/Aggression")
+	var hitbox_label = get_node_or_null("AIDebugUI/DebugPanel/VBox/HitboxInfo")
 	
 	if ai_state_label:
 		ai_state_label.text = "State: " + _get_state_name(ai_state)
@@ -252,6 +252,24 @@ func _update_ai_debug_ui():
 	
 	if aggression_label:
 		aggression_label.text = "Aggression: %.2f | Reaction: %.1fs" % [aggression_level, reaction_time]
+	
+	# Update hitbox info
+	if hitbox_label:
+		var hitbox_info = get_hitbox_debug_info()
+		var hitbox_text = "Hitboxes: "
+		
+		# Show active hitbox information
+		if is_attacking and hitbox_info.melee_active:
+			hitbox_text += "Melee(%s)" % [hitbox_info.melee_size]
+			hitbox_label.modulate = Color.RED
+		elif is_using_ability and hitbox_info.ability_active:
+			hitbox_text += "Ability(r=%.1f)" % [hitbox_info.ability_radius]
+			hitbox_label.modulate = Color.CYAN
+		else:
+			hitbox_text += "M:%s A:r%.1f" % [hitbox_info.configured_melee_size, hitbox_info.configured_ability_radius]
+			hitbox_label.modulate = Color.WHITE
+		
+		hitbox_label.text = hitbox_text
 
 func _update_ai_debug_visualization():
 	# Enhanced debug visualization for AI
@@ -273,13 +291,17 @@ func _draw_ai_debug_visuals():
 	if attack_range:
 		_draw_circle_debug(attack_range.global_position, 80, Color.RED, "Attack Range")
 	
-	# Draw melee hitbox when attacking
+	# Draw melee hitbox when attacking (using real hitbox size)
 	if melee_hitbox and is_attacking:
-		_draw_rect_debug(melee_hitbox.global_position, Vector2(60, 40), Color.ORANGE, "Melee Hitbox")
+		var actual_size = get_melee_hitbox_size()
+		var label = "Melee Hitbox: %s" % [actual_size]
+		_draw_rect_debug(melee_hitbox.global_position, actual_size, Color.ORANGE, label)
 	
-	# Draw ability hitbox when using abilities
+	# Draw ability hitbox when using abilities (using real hitbox radius)
 	if ability_hitbox and is_using_ability:
-		_draw_circle_debug(ability_hitbox.global_position, 80, Color.CYAN, "Ability Hitbox")
+		var actual_radius = get_ability_hitbox_radius()
+		var label = "Ability Hitbox: r=%.1f" % [actual_radius]
+		_draw_circle_debug(ability_hitbox.global_position, actual_radius, Color.CYAN, label)
 
 func _draw_circle_debug(pos: Vector2, radius: float, color: Color, label: String):
 	var line = Line2D.new()
@@ -1199,3 +1221,17 @@ func get_ai_status() -> Dictionary:
 		"action_commitment": current_action_commitment,
 		"commitment_timer": action_commitment_timer
 	}
+
+func print_ai_hitbox_info():
+	"""Print AI enemy hitbox information to console for debugging"""
+	var hitbox_info = get_hitbox_debug_info()
+	print("🤖 === AI HITBOX DEBUG INFO ===")
+	print("  Enemy: ", difficulty_name, " (Difficulty: ", ai_difficulty, ")")
+	print("  Melee: size=%s, pos=%s, active=%s" % [hitbox_info.melee_size, hitbox_info.melee_position, hitbox_info.melee_active])
+	print("  Ability: radius=%.1f, pos=%s, active=%s" % [hitbox_info.ability_radius, hitbox_info.ability_position, hitbox_info.ability_active])
+	print("  Configured: melee=%s, ability_radius=%.1f" % [hitbox_info.configured_melee_size, hitbox_info.configured_ability_radius])
+	print("  Combat State: ", combat_state, " | AI State: ", _get_state_name(ai_state))
+	print("  Match: melee=%s, ability=%s" % [
+		hitbox_info.melee_size == hitbox_info.configured_melee_size,
+		abs(hitbox_info.ability_radius - hitbox_info.configured_ability_radius) < 0.1
+	])

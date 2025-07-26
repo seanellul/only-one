@@ -31,14 +31,15 @@ texture = SubResource("GradientTexture2D_tem5s")
 
 [node name="Enemy1" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(400, 300)
-ai_difficulty = 5
-show_ai_debug = true
-show_hitbox_debug = true
+ai_difficulty = 6
+difficulty_name = "Shadow222"
+ability_hitbox_radius = 20.0
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 position = Vector2(200, 300)
+show_turn_debug = false
 max_health = 120
-show_hitbox_debug = true
+ability_hitbox_radius = 80.0
 
 [node name="CameraController" type="Node2D" parent="."]
 

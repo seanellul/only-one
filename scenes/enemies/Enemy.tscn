@@ -1,4 +1,4 @@
-[gd_scene load_steps=2036 format=3 uid="uid://c31atncmp20q0"]
+[gd_scene load_steps=2032 format=3 uid="uid://c31atncmp20q0"]
 
 [ext_resource type="Script" path="res://systems/enemies/EnemyController.gd" id="1_enemy_script"]
 [ext_resource type="Texture2D" uid="uid://bsfn2ncwa4tyd" path="res://art/sprites/knight_2/180Turn.png" id="2_hm667"]
@@ -2794,14 +2794,6 @@ region = Rect2(384, 448, 64, 64)
 atlas = ExtResource("14_qpg1l")
 region = Rect2(448, 448, 64, 64)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_3svx1"]
-atlas = ExtResource("14_qpg1l")
-region = Rect2(512, 448, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_0hx35"]
-atlas = ExtResource("14_qpg1l")
-region = Rect2(576, 448, 64, 64)
-
 [sub_resource type="AtlasTexture" id="AtlasTexture_5x8yx"]
 atlas = ExtResource("14_qpg1l")
 region = Rect2(640, 448, 64, 64)
@@ -3753,14 +3745,6 @@ region = Rect2(384, 320, 64, 64)
 [sub_resource type="AtlasTexture" id="AtlasTexture_kfsdn"]
 atlas = ExtResource("13_w3sqc")
 region = Rect2(320, 320, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_g3wqu"]
-atlas = ExtResource("13_w3sqc")
-region = Rect2(256, 320, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_octpf"]
-atlas = ExtResource("13_w3sqc")
-region = Rect2(192, 320, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_w7con"]
 atlas = ExtResource("13_w3sqc")
@@ -10398,12 +10382,6 @@ animations = [{
 "texture": SubResource("AtlasTexture_d7j41")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_3svx1")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_0hx35")
-}, {
-"duration": 1.0,
 "texture": SubResource("AtlasTexture_5x8yx")
 }, {
 "duration": 1.0,
@@ -11196,12 +11174,6 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_kfsdn")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_g3wqu")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_octpf")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_w7con")
@@ -14893,3 +14865,9 @@ layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 12
 text = "Aggression: 0.1"
+
+[node name="HitboxInfo" type="Label" parent="AIDebugUI/DebugPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "Hitboxes: M:(40, 20) A:r40.0"
