@@ -44,6 +44,83 @@ func _handle_debug_input():
 	if Input.is_key_pressed(KEY_Y): # Y key for testing roll invincibility
 		if player and player.has_method("test_roll_invincibility"):
 			player.test_roll_invincibility()
+	
+	# S key for testing shield system
+	if Input.is_key_pressed(KEY_S) and Input.is_key_pressed(KEY_CTRL):
+		_test_shield_system()
+	
+	# D key for testing enemy death animation
+	if Input.is_key_pressed(KEY_D) and Input.is_key_pressed(KEY_CTRL):
+		_test_enemy_death()
+	
+	# F key for testing enemy fade without death
+	if Input.is_key_pressed(KEY_F) and Input.is_key_pressed(KEY_CTRL):
+		_test_enemy_fade()
+	
+	# H key for testing enemy shadow modes
+	if Input.is_key_pressed(KEY_H) and Input.is_key_pressed(KEY_CTRL):
+		_test_enemy_shadows()
+	
+	# J key for cycling shadow modes
+	if Input.is_key_pressed(KEY_J) and Input.is_key_pressed(KEY_CTRL):
+		_cycle_enemy_shadow_mode()
+
+func _test_shield_system():
+	if player and player.has_method("test_shield_blocking"):
+		print("🧪 Running shield test...")
+		player.test_shield_blocking()
+	else:
+		print("⚠️ Shield test not available")
+
+func _test_enemy_death():
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	if not enemies.is_empty():
+		var enemy = enemies[0]
+		if enemy.has_method("test_death_animation"):
+			print("🧪 Testing enemy death animation...")
+			enemy.test_death_animation()
+		else:
+			print("⚠️ Enemy death test not available")
+	else:
+		print("⚠️ No enemies found to test death")
+
+func _test_enemy_fade():
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	if not enemies.is_empty():
+		var enemy = enemies[0]
+		if enemy.has_method("test_instant_fade"):
+			print("🧪 Testing enemy instant fade...")
+			enemy.test_instant_fade()
+		else:
+			print("⚠️ Enemy fade test not available")
+	else:
+		print("⚠️ No enemies found to test fade")
+
+func _test_enemy_shadows():
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	if not enemies.is_empty():
+		var enemy = enemies[0]
+		if enemy.has_method("test_shadow_modes"):
+			print("🧪 Testing enemy shadow modes...")
+			enemy.test_shadow_modes()
+		else:
+			print("⚠️ Enemy shadow test not available")
+	else:
+		print("⚠️ No enemies found to test shadows")
+
+func _cycle_enemy_shadow_mode():
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	if not enemies.is_empty():
+		var enemy = enemies[0]
+		if enemy.has_method("set_shadow_mode"):
+			# Cycle through shadow modes
+			var current_mode = enemy.shadow_mode
+			var next_mode = (current_mode + 1) % 5 # 5 shadow modes total
+			enemy.set_shadow_mode(next_mode)
+		else:
+			print("⚠️ Enemy shadow mode change not available")
+	else:
+		print("⚠️ No enemies found to change shadow mode")
 
 func _test_damage_player():
 	if player:
