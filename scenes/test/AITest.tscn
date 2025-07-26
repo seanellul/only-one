@@ -6,12 +6,12 @@
 [ext_resource type="Texture2D" uid="uid://cwqhgf1hfv68x" path="res://scenes/town/ChatGPT Image Jul 25, 2025, 05_26_40 PM.png" id="4_uf85x"]
 [ext_resource type="TileSet" uid="uid://c1234568aa0" path="res://scenes/town/town_tileset.tres" id="5_0x3ib"]
 
-[sub_resource type="Gradient" id="Gradient_awnk7"]
+[sub_resource type="Gradient" id="Gradient_mfmae"]
 offsets = PackedFloat32Array(0, 0.714286)
 colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_tem5s"]
-gradient = SubResource("Gradient_awnk7")
+gradient = SubResource("Gradient_mfmae")
 fill = 1
 fill_from = Vector2(0.5, 0.5)
 
@@ -31,7 +31,7 @@ texture = SubResource("GradientTexture2D_tem5s")
 
 [node name="Enemy1" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(400, 300)
-ai_difficulty = 6
+ai_difficulty = 2
 difficulty_name = "Shadow222"
 ability_hitbox_radius = 20.0
 
@@ -123,7 +123,6 @@ Y - Test Roll Invincibility
 ✓ Better distance management"
 
 [node name="Layer0" type="TileMapLayer" parent="."]
-visible = false
 use_parent_material = true
 position = Vector2(-755, 416)
 scale = Vector2(0.961692, 1.03799)

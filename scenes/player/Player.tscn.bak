@@ -1,4 +1,4 @@
-[gd_scene load_steps=2059 format=3 uid="uid://bwd0k3vdhvqyc"]
+[gd_scene load_steps=2056 format=3 uid="uid://bwd0k3vdhvqyc"]
 
 [ext_resource type="Texture2D" uid="uid://d2xlvn7v5raof" path="res://art/sprites/knight_2/Run.png" id="1_encq8"]
 [ext_resource type="Script" path="res://systems/player/PlayerController.gd" id="1_player_script"]
@@ -20,7 +20,6 @@
 [ext_resource type="Texture2D" uid="uid://dkyt042uqljr6" path="res://art/sprites/knight_2/combat/ShieldBlockStart.png" id="12_s5q6v"]
 [ext_resource type="Texture2D" uid="uid://dx6plvablkuvm" path="res://art/sprites/knight_2/combat/ShieldBlockMid.png" id="13_jc113"]
 [ext_resource type="Texture2D" uid="uid://pq8epts1tl1" path="res://art/sprites/knight_2/combat/TakeDamage.png" id="17_64g15"]
-[ext_resource type="PackedScene" path="res://scenes/NPCs/DialogueUI.tscn" id="19_1kijy"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_kqtre"]
 atlas = ExtResource("5_8trma")
@@ -14925,13 +14924,13 @@ animations = [{
 [sub_resource type="CircleShape2D" id="CircleShape2D_bu1db"]
 radius = 8.0373
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_interaction"]
+radius = 30.0
+
 [sub_resource type="Environment" id="Environment_ndtnx"]
 background_mode = 3
 tonemap_mode = 3
 glow_hdr_threshold = 1.5
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_interaction"]
-radius = 30.0
 
 [sub_resource type="Gradient" id="Gradient_0ka4n"]
 offsets = PackedFloat32Array(0, 0.743506)
@@ -14963,16 +14962,6 @@ zoom = Vector2(3, 3)
 [node name="WorldEnvironment" type="WorldEnvironment" parent="Camera2D"]
 environment = SubResource("Environment_ndtnx")
 
-[node name="DialogueUI" parent="Camera2D" instance=ExtResource("19_1kijy")]
-offset_left = 3.0
-offset_top = 114.0
-offset_right = 3.0
-offset_bottom = 114.0
-grow_horizontal = 2
-grow_vertical = 2
-scale = Vector2(0.45, 0.45)
-size_flags_vertical = 8
-
 [node name="PlayerUpgrades" type="Node" parent="."]
 
 [node name="PlayerInteractionArea" type="Area2D" parent="."]
@@ -14989,7 +14978,6 @@ color = Color(1, 0.654902, 0.596078, 1)
 texture = SubResource("GradientTexture2D_edffn")
 
 [node name="CombatDebugUI" type="CanvasLayer" parent="."]
-visible = false
 
 [node name="DebugPanel" type="Panel" parent="CombatDebugUI"]
 anchors_preset = 2
