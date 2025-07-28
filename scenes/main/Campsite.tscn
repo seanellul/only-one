@@ -1,0 +1,229 @@
+[gd_scene load_steps=7 format=3 uid="uid://d2n162asxutw"]
+
+[ext_resource type="Script" path="res://systems/main/CampsiteController.gd" id="1_campsite_script"]
+[ext_resource type="PackedScene" uid="uid://bwd0k3vdhvqyc" path="res://scenes/player/Player.tscn" id="2_player_scene"]
+[ext_resource type="PackedScene" uid="uid://cfjo1bhhno0y5" path="res://scenes/NPCs/Carl.tscn" id="3_carl_scene"]
+[ext_resource type="PackedScene" uid="uid://e7j77cyybdf1" path="res://scenes/NPCs/Ego.tscn" id="4_ego_scene"]
+[ext_resource type="Texture2D" uid="uid://lcq1k11c1eqb" path="res://art/tilesheets/tiles/grass_0.png" id="5_grass_texture"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(200, 100)
+
+[node name="Campsite" type="Node2D"]
+script = ExtResource("1_campsite_script")
+
+[node name="Environment" type="Node2D" parent="."]
+
+[node name="Background" type="ColorRect" parent="Environment"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 2560.0
+offset_bottom = 1440.0
+color = Color(0.1, 0.15, 0.1, 1)
+
+[node name="GroundTiles" type="Node2D" parent="Environment"]
+
+[node name="GrassTile1" type="Sprite2D" parent="Environment/GroundTiles"]
+position = Vector2(640, 360)
+scale = Vector2(10, 5)
+texture = ExtResource("5_grass_texture")
+
+[node name="GrassTile2" type="Sprite2D" parent="Environment/GroundTiles"]
+position = Vector2(1920, 360)
+scale = Vector2(10, 5)
+texture = ExtResource("5_grass_texture")
+
+[node name="Campfire" type="Node2D" parent="Environment"]
+position = Vector2(640, 200)
+
+[node name="FireSprite" type="ColorRect" parent="Environment/Campfire"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -30.0
+offset_right = 20.0
+offset_bottom = 10.0
+color = Color(1, 0.4, 0, 1)
+
+[node name="FireLight" type="PointLight2D" parent="Environment/Campfire"]
+energy = 1.5
+range_item_cull_mask = 2
+shadow_enabled = true
+texture_scale = 2.0
+
+[node name="DirectionalLight" type="DirectionalLight2D" parent="Environment"]
+energy = 0.6
+shadow_enabled = true
+
+[node name="Characters" type="Node2D" parent="."]
+
+[node name="Player" parent="Characters" instance=ExtResource("2_player_scene")]
+position = Vector2(640, 400)
+damage_flash_duration = 0.3
+damage_flash_intensity = 0.6
+show_turn_debug = true
+use_sprite_effects = false
+move_speed = 180.0
+acceleration = 1000.0
+friction = 800.0
+forward_speed_modifier = 1.0
+backward_speed_modifier = 0.4
+strafe_speed_modifier = 0.6
+forward_threshold = 0.7
+backward_threshold = -0.7
+turn_detection_threshold = -0.6
+transition_smoothing = 0.08
+roll_cooldown_duration = 0.6
+roll_speed = 300.0
+roll_momentum_decay = 0.96
+max_roll_distance = 120.0
+roll_input_grace_period = 0.1
+minimum_roll_duration = 0.75
+max_health = 100
+melee_combo_window = 1.3
+q_ability_cooldown = 3.0
+r_ability_cooldown = 8.0
+shield_cone_angle = 120.0
+shield_debug = false
+hitbox_activation_delay = 0.3
+hitbox_active_duration = 0.2
+melee_hitbox_size = Vector2(40, 20)
+melee_hitbox_offset = Vector2(30, 0)
+base_ability_hitbox_radius = 40.0
+sfx_enabled = true
+show_hitbox_debug = false
+melee_hitbox_start_frame = 6
+melee_hitbox_end_frame = 10
+ability_hitbox_start_frame = 6
+ability_hitbox_end_frame = 12
+
+[node name="Carl" parent="Characters" instance=ExtResource("3_carl_scene")]
+position = Vector2(500, 250)
+
+[node name="Ego" parent="Characters" instance=ExtResource("4_ego_scene")]
+position = Vector2(780, 250)
+
+[node name="Portals" type="Node2D" parent="."]
+
+[node name="LevelPortal" type="Area2D" parent="Portals" groups=["level_portal"]]
+position = Vector2(640, 600)
+
+[node name="PortalVisual" type="ColorRect" parent="Portals/LevelPortal"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -50.0
+offset_right = 100.0
+offset_bottom = 50.0
+color = Color(0.3, 0.3, 0.8, 0.8)
+
+[node name="PortalCollision" type="CollisionShape2D" parent="Portals/LevelPortal"]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="PortalLabel" type="Label" parent="Portals/LevelPortal"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -60.0
+offset_right = 100.0
+offset_bottom = -35.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "Enter Depths"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InteractionPrompt" type="Label" parent="Portals/LevelPortal"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = 60.0
+offset_right = 100.0
+offset_bottom = 85.0
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 0)
+theme_override_font_sizes/font_size = 18
+text = "Press E to Enter"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+zoom = Vector2(1.2, 1.2)
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="GameUI" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopLeft" type="VBoxContainer" parent="UI/GameUI"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -120.0
+offset_right = 300.0
+offset_bottom = -20.0
+grow_vertical = 0
+
+[node name="ProgressLabel" type="Label" parent="UI/GameUI/TopLeft"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Shadow Essence: 0"
+
+[node name="LevelLabel" type="Label" parent="UI/GameUI/TopLeft"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Levels Completed: 0/10"
+
+[node name="TopRight" type="VBoxContainer" parent="UI/GameUI"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -300.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 120.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="DeathCountLabel" type="Label" parent="UI/GameUI/TopRight"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Deaths: 0"
+horizontal_alignment = 2
+
+[node name="FadeOverlay" type="ColorRect" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="AudioManager" type="Node" parent="."]
+
+[node name="GameManager" type="Node" parent="."]

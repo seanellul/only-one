@@ -1,14 +1,63 @@
-[gd_scene load_steps=3 format=3 uid="uid://b3u5be6p0mb1g"]
+[gd_scene load_steps=10 format=3 uid="uid://b3u5be6p0mb1g"]
 
 [ext_resource type="Script" path="res://systems/upgrades/UpgradeAltar.gd" id="1_altar"]
+[ext_resource type="Texture2D" uid="uid://cuwarys1ugjfv" path="res://art/sprites/altar_of_reflection.png" id="2_5wuuq"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5ih2j"]
+atlas = ExtResource("2_5wuuq")
+region = Rect2(0, 0, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3d5rl"]
+atlas = ExtResource("2_5wuuq")
+region = Rect2(256, 0, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cvtce"]
+atlas = ExtResource("2_5wuuq")
+region = Rect2(512, 0, 256, 256)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1qvtu"]
+atlas = ExtResource("2_5wuuq")
+region = Rect2(768, 0, 256, 256)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_2chet"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5ih2j")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3d5rl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cvtce")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1qvtu")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 80.0
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_s61jm"]
+size = Vector2(149, 214)
+
 [node name="UpgradeAltar" type="Node2D" groups=["upgrade_altars"]]
+position = Vector2(28, 34)
 script = ExtResource("1_altar")
 
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 3)
+scale = Vector2(0.25, 0.25)
+sprite_frames = SubResource("SpriteFrames_2chet")
+autoplay = "default"
+frame_progress = 0.862225
+
 [node name="VisualIndicator" type="ColorRect" parent="."]
+visible = false
 offset_left = -32.0
 offset_top = -32.0
 offset_right = 32.0
@@ -16,6 +65,7 @@ offset_bottom = 32.0
 color = Color(1, 1, 0, 0.8)
 
 [node name="AltarLabel" type="Label" parent="."]
+visible = false
 offset_left = -52.0
 offset_top = -51.0
 offset_right = 61.0
@@ -32,10 +82,11 @@ shape = SubResource("CircleShape2D_1")
 debug_color = Color(0, 1, 0, 0.2)
 
 [node name="PromptLabel" type="Label" parent="."]
-offset_left = -60.0
-offset_top = -80.0
-offset_right = 60.0
-offset_bottom = -60.0
+offset_left = -44.0
+offset_top = -42.0
+offset_right = 76.0
+offset_bottom = -22.0
+scale = Vector2(0.75, 0.75)
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
 theme_override_constants/shadow_offset_x = 2
@@ -46,6 +97,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="GlowEffect" type="ColorRect" parent="."]
+visible = false
 z_index = -1
 offset_left = -34.0
 offset_top = -34.0
@@ -54,3 +106,14 @@ offset_bottom = 34.0
 color = Color(1, 1, 0, 0.3)
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+
+[node name="Area2D" type="Area2D" parent="."]
+position = Vector2(0, 2.38419e-07)
+scale = Vector2(1, 1)
+collision_layer = 2
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-1, -3.57628e-07)
+scale = Vector2(0.25, 0.25)
+shape = SubResource("RectangleShape2D_s61jm")

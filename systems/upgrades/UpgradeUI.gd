@@ -193,7 +193,7 @@ func show_upgrade_ui():
 	is_ui_visible = true
 	
 	# Pause the game
-	get_tree().paused = true
+	# get_tree().paused = true
 	
 	upgrade_ui_opened.emit()
 	print("🛒 Upgrade UI opened")

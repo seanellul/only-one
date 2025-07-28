@@ -24,6 +24,12 @@ signal player_died
 # ===== PLAYER-SPECIFIC SETTINGS =====
 @export var show_turn_debug: bool = true # Show debug info for 180° turn attempts
 
+# ===== MOVEMENT CONTROL =====
+var movement_enabled: bool = true
+
+# ===== SCENE TRANSPORTER =====
+var scene_transporter: SceneTransporter
+
 # ===== PLAYER INPUT SYSTEM =====
 
 func _ready():
@@ -42,10 +48,29 @@ func _ready():
 	# Get PlayerUI reference
 	_setup_player_ui()
 	
+	# Setup scene transporter for death transitions
+	_setup_scene_transporter()
+	
 	# Keep mouse visible and contained for proper control
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	
 	print("🎮 PlayerController initialized")
+
+func set_movement_enabled(enabled: bool):
+	"""Enable or disable player movement"""
+	movement_enabled = enabled
+	if not enabled:
+		current_movement_direction = Vector2.ZERO
+		is_moving = false
+
+func play_revival_animation():
+	"""Play the character revival animation for the intro sequence"""
+	if animated_sprite and animated_sprite.sprite_frames:
+		if animated_sprite.sprite_frames.has_animation("idle"):
+			animated_sprite.play("idle")
+			print("🔄 Playing revival animation (idle)")
+		else:
+			print("⚠️ No revival animation available")
 
 func _setup_player_ui():
 	# Find PlayerUI in the camera
@@ -54,6 +79,18 @@ func _setup_player_ui():
 		player_ui = camera.get_node("PlayerUI") as PlayerUI
 		if not player_ui:
 			print("❌ PlayerUI not found in Camera2D!")
+
+func _setup_scene_transporter():
+	# Create scene transporter for death transitions
+	scene_transporter = SceneTransporter.new()
+	scene_transporter.name = "SceneTransporter"
+	add_child(scene_transporter)
+	
+	# Connect to transition signals for feedback
+	scene_transporter.transition_started.connect(_on_transition_started)
+	scene_transporter.transition_complete.connect(_on_transition_complete)
+	
+	print("🚪 Scene transporter setup for player death handling")
 
 # ===== OVERRIDE VIRTUAL FUNCTIONS =====
 
@@ -149,8 +186,8 @@ func _complete_180_turn():
 	turn_timer = 0.0
 
 func _handle_movement_input(delta) -> Vector2:
-	# Don't move during certain states or during dialogue
-	if is_rolling or is_turning_180 or is_taking_damage or is_dead or is_attacking or is_using_ability or _is_dialogue_active():
+	# Don't move during certain states or during dialogue, or if movement disabled
+	if not movement_enabled or is_rolling or is_turning_180 or is_taking_damage or is_dead or is_attacking or is_using_ability or _is_dialogue_active():
 		current_movement_direction = Vector2.ZERO
 		is_moving = false
 		return Vector2.ZERO
@@ -370,14 +407,28 @@ func _trigger_damage_flash():
 # ===== PLAYER DEATH AND GAME OVER =====
 
 func _complete_death_animation():
-	# Override to show game over instead of just completing
-	print("💀 Player death animation complete - showing game over")
-	_show_game_over()
+	# Override to transport to town instead of showing game over
+	print("💀 Player death animation complete - transporting to town")
+	_transport_to_town_on_death()
+
+func _transport_to_town_on_death():
+	"""Transport player to town on death with fade transition"""
+	if not scene_transporter:
+		print("❌ No scene transporter available, falling back to restart")
+		_restart_game()
+		return
+	
+	# Disable player input during transition
+	set_movement_enabled(false)
+	
+	# Start transition to town with appropriate music
+	scene_transporter.transition_to_town()
+	print("🏘️ Transporting to town due to player death")
 
 func _show_game_over():
-	if game_over_ui:
-		game_over_ui.visible = true
-		print("🎮 Game Over screen displayed")
+	# Legacy method - now redirects to town transport
+	print("🔄 Redirecting game over to town transport")
+	_transport_to_town_on_death()
 
 func _restart_game():
 	print("🔄 Restarting game...")
@@ -415,6 +466,19 @@ func _reset_all_combat_states():
 	death_animation_completed = false # Reset death completion flag
 	
 	print("🔄 All combat states reset")
+
+# ===== SCENE TRANSITION CALLBACKS =====
+
+func _on_transition_started(target_scene: String):
+	"""Called when scene transition starts"""
+	print("🚪 Scene transition started to: ", target_scene)
+	# Disable all player input during transition
+	set_movement_enabled(false)
+
+func _on_transition_complete():
+	"""Called when scene transition completes"""
+	print("✅ Scene transition complete")
+	# Player will be reset in the new scene
 
 # ===== PLAYER DEBUG UI =====
 
@@ -650,7 +714,9 @@ func _on_ability_hitbox_body_entered(body):
 
 func _is_dialogue_active() -> bool:
 	"""Check if any dialogue is currently active"""
-	# Try to get the DialogueManager instance
-	if DialogueManager and DialogueManager.get_instance():
-		return DialogueManager.get_instance().is_dialogue_active()
+	# Check if there are any active dialogue UIs in the scene
+	var dialogue_uis = get_tree().get_nodes_in_group("dialogue_ui")
+	for ui in dialogue_uis:
+		if ui.has_method("is_active") and ui.is_active():
+			return true
 	return false

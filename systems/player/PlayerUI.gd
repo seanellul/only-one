@@ -6,6 +6,7 @@ extends CanvasLayer
 class_name PlayerUI
 
 # ===== UI REFERENCES =====
+@onready var health_bar_container: Control = $HealthBar
 @onready var health_fill: ColorRect = $HealthBar/HealthFill
 @onready var ability1_icon: TextureRect = $AbilityContainer/Ability1/Icon
 @onready var ability1_overlay: ColorRect = $AbilityContainer/Ability1/CooldownOverlay
@@ -26,9 +27,16 @@ var player: PlayerController
 var health_tween: Tween
 var ability1_tween: Tween
 var ability2_tween: Tween
+var health_bar_scale_tween: Tween
 
 # ===== SHADOW ESSENCE SYSTEM =====
-var shadow_essence: int = 0
+var shadow_essence: int = 50000
+
+# ===== GROWING HEALTH BAR SYSTEM =====
+var base_max_health: int = 100 # Base health before upgrades
+var current_max_health: int = 100 # Current max health including upgrades
+var base_health_bar_size: Vector2 # Original health bar size
+var max_health_bar_scale: float = 2.0 # Maximum scale multiplier (can grow to 2x size)
 
 func _ready():
 	# Find the player (parent of camera that contains this UI)
@@ -38,12 +46,31 @@ func _ready():
 		if not player:
 			print("❌ PlayerUI: Could not find PlayerController!")
 	
+	# Store the base health bar size
+	if health_bar_container:
+		base_health_bar_size = health_bar_container.size
+	
+	# Connect to UpgradeManager signals
+	_connect_upgrade_signals()
+	
 	# Initialize UI state
 	_initialize_ui()
+
+func _connect_upgrade_signals():
+	"""Connect to UpgradeManager signals for health upgrades"""
+	var upgrade_manager = UpgradeManager.get_instance()
+	if upgrade_manager:
+		if not upgrade_manager.max_health_changed.is_connected(_on_max_health_upgraded):
+			upgrade_manager.max_health_changed.connect(_on_max_health_upgraded)
+			print("✅ Connected to UpgradeManager max_health_changed signal")
+	else:
+		print("⚠️ UpgradeManager not found - health bar scaling disabled")
 
 func _initialize_ui():
 	# Set initial health
 	if player:
+		base_max_health = player.max_health
+		current_max_health = player.max_health
 		_update_health_bar(player.current_health, player.max_health, false)
 	
 	# Set initial ability states
@@ -168,6 +195,50 @@ func spend_shadow_essence(amount: int) -> bool:
 
 func get_shadow_essence() -> int:
 	return shadow_essence
+
+# ===== GROWING HEALTH BAR SYSTEM =====
+
+func _on_max_health_upgraded(new_max_health: int):
+	"""Handle health upgrades by scaling the health bar"""
+	print("💚 Health upgraded! New max health: ", new_max_health)
+	
+	current_max_health = new_max_health
+	_update_health_bar_scale()
+
+func _update_health_bar_scale():
+	"""Scale the health bar based on current vs base max health"""
+	if not health_bar_container or base_max_health <= 0:
+		return
+	
+	# Calculate scale factor (clamped to max scale)
+	var health_ratio = float(current_max_health) / float(base_max_health)
+	var scale_factor = min(health_ratio, max_health_bar_scale)
+	
+	# Calculate new size - only scale width, keep height constant
+	var target_size = Vector2(
+		base_health_bar_size.x * scale_factor, # Scale width based on health upgrades
+		base_health_bar_size.y # Keep height constant
+	)
+	
+	# Animate the health bar growth
+	if health_bar_scale_tween:
+		health_bar_scale_tween.kill()
+	
+	health_bar_scale_tween = create_tween()
+	health_bar_scale_tween.set_ease(Tween.EASE_OUT)
+	health_bar_scale_tween.set_trans(Tween.TRANS_BACK)
+	health_bar_scale_tween.tween_property(health_bar_container, "size", target_size, 0.6)
+	
+	# Add a satisfying bounce effect
+	health_bar_scale_tween.parallel().tween_property(health_bar_container, "modulate", Color(1.2, 1.2, 1.2, 1.0), 0.1)
+	health_bar_scale_tween.tween_property(health_bar_container, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.2)
+	
+	print("💚 Health bar scaled to ", scale_factor, "x width (", target_size, ")")
+
+func test_health_bar_scaling(test_max_health: int):
+	"""Test function to manually trigger health bar scaling - useful for debugging"""
+	print("🧪 Testing health bar scaling with max health: ", test_max_health)
+	_on_max_health_upgraded(test_max_health)
 
 # ===== VISUAL EFFECTS =====
 

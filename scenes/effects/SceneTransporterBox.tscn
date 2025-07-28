@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://bk6s8qx1f180m"]
+
+[ext_resource type="Script" path="res://systems/main/SceneTransporterBox.gd" id="1_transport_box"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_c58t2"]
+size = Vector2(45, 41)
+
+[node name="SceneTransporterBox" type="Area2D"]
+script = ExtResource("1_transport_box")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(23, 22)
+shape = SubResource("RectangleShape2D_c58t2")

@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://bq8xm4vn7kl2p"]
+
+[ext_resource type="Script" path="res://systems/main/SceneTransporter.gd" id="1_scene_transporter"]
+
+[node name="SceneTransporter" type="Node"]
+script = ExtResource("1_scene_transporter")
+fade_duration = 1.5
+fade_color = Color(0, 0, 0, 1)
+transition_delay = 0.5 

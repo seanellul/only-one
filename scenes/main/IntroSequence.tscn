@@ -1,0 +1,204 @@
+[gd_scene load_steps=23 format=3 uid="uid://b1hjm8yjd5nlo"]
+
+[ext_resource type="Script" path="res://systems/main/IntroSequenceController.gd" id="1_intro_script"]
+[ext_resource type="PackedScene" uid="uid://dt8w2ot2vy737" path="res://scenes/NPCs/DialogueUI.tscn" id="2_xpwvq"]
+[ext_resource type="PackedScene" uid="uid://e7j77cyybdf1" path="res://scenes/NPCs/Ego.tscn" id="3_ego_scene"]
+[ext_resource type="Texture2D" uid="uid://b68bwjtvbvhat" path="res://art/sprites/knight_2/idle/Idle.png" id="4_ocr7w"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6qjuk"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(0, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_cdxyl"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(64, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f4oju"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(128, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_f5jae"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(192, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_na7nb"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(256, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sa1rv"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(320, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_goa1s"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(384, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_a1jmg"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(448, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_elxvy"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(512, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bg8tt"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(576, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h0pbo"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(640, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ng05n"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(704, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_peb10"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(768, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sstvb"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(832, 0, 64, 64)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_jxrvo"]
+atlas = ExtResource("4_ocr7w")
+region = Rect2(896, 0, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8fdsk"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6qjuk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_cdxyl")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f4oju")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_f5jae")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_na7nb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sa1rv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_goa1s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_a1jmg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_elxvy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bg8tt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h0pbo")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ng05n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_peb10")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sstvb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_jxrvo")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[sub_resource type="Gradient" id="Gradient_a5gyy"]
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_m30u8"]
+gradient = SubResource("Gradient_a5gyy")
+fill = 1
+fill_from = Vector2(0.48926, 0.446301)
+fill_to = Vector2(0.866348, 0.0787589)
+
+[node name="IntroSequence" type="Node2D"]
+script = ExtResource("1_intro_script")
+
+[node name="GameWorld" type="Node2D" parent="." groups=["intro_world"]]
+
+[node name="SpotLight" type="PointLight2D" parent="GameWorld"]
+position = Vector2(640, 360)
+energy = 0.0
+range_item_cull_mask = 2
+shadow_enabled = true
+shadow_filter = 1
+texture_scale = 5.0
+
+[node name="DirectionalLight" type="DirectionalLight2D" parent="GameWorld"]
+enabled = false
+energy = 0.8
+shadow_enabled = true
+shadow_filter = 1
+
+[node name="Camera" type="Camera2D" parent="GameWorld"]
+position = Vector2(640, 360)
+zoom = Vector2(1.5, 1.5)
+
+[node name="DialogueUI" parent="GameWorld/Camera" instance=ExtResource("2_xpwvq")]
+
+[node name="DialogueManager" type="Node2D" parent="GameWorld"]
+
+[node name="Ego" parent="GameWorld" instance=ExtResource("3_ego_scene")]
+position = Vector2(500, 360)
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="GameWorld"]
+position = Vector2(644, 390)
+sprite_frames = SubResource("SpriteFrames_8fdsk")
+animation = &"idle"
+
+[node name="PointLight2D" type="PointLight2D" parent="GameWorld"]
+position = Vector2(637, 377)
+scale = Vector2(15, 15)
+color = Color(0.615225, 0.260677, 1.92523e-07, 1)
+energy = 4.9
+texture = SubResource("GradientTexture2D_m30u8")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="TextContainer" type="CenterContainer" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="IntroLabel" type="Label" parent="UI/TextContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_font_sizes/font_size = 48
+text = "A Pirate17 Game Jam Submission"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FadeOverlay" type="ColorRect" parent="UI"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="BlackBackground" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0, 0, 0, 1)
+
+[node name="AudioManager" type="Node" parent="."]

@@ -121,7 +121,7 @@ Players can talk to both Carl and Ego to get different perspectives on their jou
 ## Technical Implementation
 
 - **Script**: `systems/NPCs/Ego.gd`
-- **Scene**: `scenes/NPCs/Ego.tscn` 
+- **Scene**: show_dialogue
 - **Base Class**: Extends `DialogueSystem`
 - **Assets**: Currently uses Carl's sprites (can be replaced with unique Ego sprites later)
 

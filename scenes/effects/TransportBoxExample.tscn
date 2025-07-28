@@ -1,0 +1,42 @@
+[gd_scene load_steps=3 format=3 uid="uid://bxs4m7vn9kl5q"]
+
+[ext_resource type="PackedScene" uid="uid://cq9xm8vn2kl3p" path="res://scenes/effects/SceneTransporterBox.tscn" id="1_transport_box"]
+[ext_resource type="PackedScene" uid="uid://bwd0k3vdhvqyc" path="res://scenes/player/Player.tscn" id="2_player"]
+
+[node name="TransportBoxExample" type="Node2D"]
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+position = Vector2(400, 300)
+
+[node name="TownPortal" parent="." instance=ExtResource("1_transport_box")]
+position = Vector2(200, 200)
+target_scene_path = "res://scenes/town/town.tscn"
+box_color = Color(0.2, 1, 0.2, 0.4)
+label_text = "To Town"
+
+[node name="CampsitePortal" parent="." instance=ExtResource("1_transport_box")]
+position = Vector2(600, 200)
+target_scene_path = "res://scenes/main/Campsite.tscn"
+box_color = Color(1, 0.6, 0.2, 0.4)
+label_text = "To Campsite"
+
+[node name="OneTimePortal" parent="." instance=ExtResource("1_transport_box")]
+position = Vector2(400, 100)
+target_scene_path = "res://scenes/main/MainMenu.tscn"
+one_shot = true
+box_color = Color(1, 0.2, 0.8, 0.4)
+label_text = "One-Time Exit"
+
+[node name="DoorExample" parent="." instance=ExtResource("1_transport_box")]
+position = Vector2(200, 400)
+target_scene_path = "res://scenes/town/town.tscn"
+box_color = Color(0.6, 0.3, 0.1, 0.3)
+box_size = Vector2(32, 64)
+label_text = "Door"
+
+[node name="InvisiblePortal" parent="." instance=ExtResource("1_transport_box")]
+position = Vector2(600, 400)
+target_scene_path = "res://scenes/main/MainMenu.tscn"
+box_color = Color(1, 1, 1, 0.1)
+show_label = false
+label_text = "Secret" 

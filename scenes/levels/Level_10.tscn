@@ -1,0 +1,111 @@
+[gd_scene load_steps=5 format=3 uid="uid://b8hjk8yjd5plo"]
+
+[ext_resource type="Script" path="res://systems/levels/LevelController.gd" id="1_level_script"]
+[ext_resource type="PackedScene" uid="uid://bwd0k3vdhvqyc" path="res://scenes/player/Player.tscn" id="2_player_scene"]
+[ext_resource type="PackedScene" uid="uid://c7hjk8yjd5qlo" path="res://scenes/enemies/Enemy.tscn" id="3_enemy_scene"]
+[ext_resource type="Script" path="res://systems/enemies/EnemySpawner.gd" id="4_enemy_spawner_script"]
+
+[node name="Level_10" type="Node2D"]
+script = ExtResource("1_level_script")
+
+[node name="Environment" type="Node2D" parent="."]
+
+[node name="Background" type="ColorRect" parent="Environment"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.05, 0.05, 0.15, 1)
+
+[node name="Arena" type="Node2D" parent="Environment"]
+
+[node name="ArenaFloor" type="ColorRect" parent="Environment/Arena"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = 200.0
+color = Color(0.2, 0.2, 0.3, 1)
+
+[node name="Characters" type="Node2D" parent="."]
+
+[node name="Player" parent="Characters" instance=ExtResource("2_player_scene")]
+position = Vector2(640, 360)
+
+[node name="Systems" type="Node2D" parent="."]
+
+[node name="EnemySpawner" type="Node2D" parent="Systems"]
+script = ExtResource("4_enemy_spawner_script")
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+zoom = Vector2(1.2, 1.2)
+
+[node name="Lighting" type="Node2D" parent="."]
+
+[node name="DirectionalLight" type="DirectionalLight2D" parent="Lighting"]
+energy = 0.8
+shadow_enabled = true
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="GameUI" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="TopCenter" type="HBoxContainer" parent="UI/GameUI"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 20.0
+offset_right = 200.0
+offset_bottom = 60.0
+
+[node name="LevelLabel" type="Label" parent="UI/GameUI/TopCenter"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "Level 1"
+horizontal_alignment = 1
+
+[node name="EnemyCountLabel" type="Label" parent="UI/GameUI/TopCenter"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "Enemies: 0"
+horizontal_alignment = 1
+
+[node name="TopLeft" type="VBoxContainer" parent="UI/GameUI"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -80.0
+offset_right = 250.0
+offset_bottom = -20.0
+
+[node name="EssenceLabel" type="Label" parent="UI/GameUI/TopLeft"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Essence: 0"
+
+[node name="FadeOverlay" type="ColorRect" parent="UI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 1)
+mouse_filter = 2 

@@ -1,0 +1,176 @@
+[gd_scene load_steps=6 format=3 uid="uid://cqm3eri8ipgkm"]
+
+[ext_resource type="Script" path="res://systems/main/MainMenuController.gd" id="1_main_menu_script"]
+[ext_resource type="Texture2D" uid="uid://cjl8e801sg24s" path="res://art/splash/Unus Tantum Mood board and Maps.png" id="2_8ykj6"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.1, 0.1, 0.1, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.4, 0.4, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="Gradient" id="Gradient_smo43"]
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_buosp"]
+gradient = SubResource("Gradient_smo43")
+fill = 1
+fill_from = Vector2(0.48926, 0.446301)
+fill_to = Vector2(0.866348, 0.0787589)
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main_menu_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.05, 0.05, 1)
+
+[node name="UnusTantumMoodBoardAndMaps" type="Sprite2D" parent="."]
+position = Vector2(629, 327)
+scale = Vector2(0.849021, 0.804149)
+texture = ExtResource("2_8ykj6")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MenuContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="Spacer3" type="Control" parent="CenterContainer/MenuContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Spacer4" type="Control" parent="CenterContainer/MenuContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Spacer5" type="Control" parent="CenterContainer/MenuContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Spacer6" type="Control" parent="CenterContainer/MenuContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Spacer7" type="Control" parent="CenterContainer/MenuContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="Spacer8" type="Control" parent="CenterContainer/MenuContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="GameTitle" type="Label" parent="CenterContainer/MenuContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 72
+text = "UNUS TANTUM"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="CenterContainer/MenuContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 24
+text = "\"The primary function of the self is to strive toward individuation.\""
+horizontal_alignment = 1
+
+[node name="SubtitleAuthor" type="Label" parent="CenterContainer/MenuContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 18
+text = "- Carl Jung"
+horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="CenterContainer/MenuContainer"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+
+[node name="ButtonContainer" type="VBoxContainer" parent="CenterContainer/MenuContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="StartGameButton" type="Button" parent="CenterContainer/MenuContainer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+theme_override_styles/hover = SubResource("StyleBoxFlat_1")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_1")
+theme_override_styles/normal = SubResource("StyleBoxFlat_1")
+text = "Start Game"
+
+[node name="CreditsButton" type="Button" parent="CenterContainer/MenuContainer/ButtonContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+theme_override_styles/hover = SubResource("StyleBoxFlat_1")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_1")
+theme_override_styles/normal = SubResource("StyleBoxFlat_1")
+text = "Credits"
+
+[node name="Spacer2" type="Control" parent="CenterContainer/MenuContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
+[node name="GameJamLabel" type="Label" parent="CenterContainer/MenuContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 16
+text = "A Pirate17 Game Jam Submission"
+horizontal_alignment = 1
+
+[node name="AuthorLabel" type="Label" parent="CenterContainer/MenuContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 16
+text = "A Sean Ellul Game"
+horizontal_alignment = 1
+
+[node name="FadeOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+position = Vector2(637, 377)
+scale = Vector2(15, 15)
+color = Color(0.615225, 0.260677, 1.92523e-07, 1)
+energy = 4.9
+texture = SubResource("GradientTexture2D_buosp")

@@ -10,14 +10,15 @@ config_version=5
 
 [application]
 
-config/name="Only-One"
-run/main_scene="res://scenes/town/town.tscn"
+config/name="UNUS TANTUM"
+run/main_scene="res://scenes/main/MainMenu.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
 UpgradeManager="*res://systems/main/UpgradeManager.gd"
+MusicManager="*res://systems/main/MusicManager.gd"
 
 [display]
 

@@ -1397,43 +1397,43 @@ func _setup_upgrade_system():
 		return
 	
 	var upgrade_manager = UpgradeManager.get_instance()
-
-
 	if not upgrade_manager:
 		print("⚠️ UpgradeManager not found for character upgrade integration")
 		return
 	
 	# Connect to upgrade signals
-	upgrade_manager.aoe_radius_changed.connect(_on_aoe_radius_upgrade)
-	upgrade_manager.max_health_changed.connect(_on_max_health_upgrade)
-	upgrade_manager.healing_rate_changed.connect(_on_healing_rate_upgrade)
+	if not upgrade_manager.max_health_changed.is_connected(_on_max_health_upgrade):
+		upgrade_manager.max_health_changed.connect(_on_max_health_upgrade)
+		print("✅ Connected to max_health_changed signal")
 	
-	# Initialize with current upgrade manager values
-	upgrade_manager.initialize_with_player(self)
+	if not upgrade_manager.aoe_radius_changed.is_connected(_on_aoe_radius_upgrade):
+		upgrade_manager.aoe_radius_changed.connect(_on_aoe_radius_upgrade)
+		print("✅ Connected to aoe_radius_changed signal")
+	
+	if not upgrade_manager.healing_rate_changed.is_connected(_on_healing_rate_upgrade):
+		upgrade_manager.healing_rate_changed.connect(_on_healing_rate_upgrade)
+		print("✅ Connected to healing_rate_changed signal")
 	
 	# Apply current upgrades
-	_apply_current_upgrades()
+	_apply_current_upgrades(upgrade_manager)
 	
 	print("🔧 Upgrade system integrated for player character")
 
-func _apply_current_upgrades():
+func _apply_current_upgrades(upgrade_manager: UpgradeManager):
 	"""Apply all current upgrade effects to this character"""
-	var upgrade_manager = UpgradeManager.get_instance()
 	if not upgrade_manager:
 		return
 	
+	# Apply health upgrade using the proper UpgradeManager method
+	var new_max_health = upgrade_manager.get_max_health_with_upgrades()
+	if new_max_health != max_health:
+		_on_max_health_upgrade(new_max_health)
+	
 	# Apply AoE radius upgrade
-	var radius_multiplier = upgrade_manager.get_aoe_radius_multiplier()
-	ability_hitbox_radius = base_ability_hitbox_radius * radius_multiplier
+	var aoe_multiplier = upgrade_manager.get_aoe_radius_multiplier()
+	_on_aoe_radius_upgrade(aoe_multiplier)
 	
-	# Apply health upgrade
-	var upgraded_max_health = upgrade_manager.get_max_health_with_upgrades()
-	if upgraded_max_health != max_health:
-		var health_percentage = float(current_health) / float(max_health)
-		max_health = upgraded_max_health
-		current_health = int(max_health * health_percentage) # Maintain health percentage
-	
-	print("🔧 Applied current upgrades: radius=", ability_hitbox_radius, ", max_health=", max_health)
+	print("🔧 Applied current upgrades: max_health=", max_health, ", aoe_multiplier=", aoe_multiplier)
 
 func _on_aoe_radius_upgrade(new_multiplier: float):
 	"""Handle AoE radius upgrade"""
@@ -1459,9 +1459,10 @@ func apply_healing_on_attack(damage_dealt: int):
 	if not upgrade_manager:
 		return
 	
+	# Get healing rate from UpgradeManager (starts at 0%, only increases with upgrades)
 	var healing_rate = upgrade_manager.get_healing_on_attack_rate()
 	if healing_rate <= 0:
-		return
+		return # No healing if no upgrades purchased
 	
 	var healing_amount = int(damage_dealt * (healing_rate / 100.0))
 	if healing_amount > 0:
@@ -1471,3 +1472,38 @@ func apply_healing_on_attack(damage_dealt: int):
 func get_current_ability_radius() -> float:
 	"""Get the current ability radius including upgrades"""
 	return ability_hitbox_radius
+
+# ===== HEALTH SYSTEM =====
+
+func get_current_health() -> int:
+	"""Get the current health value"""
+	return current_health
+
+func set_max_health(new_max_health: int):
+	"""Set the maximum health value"""
+	var health_percentage = float(current_health) / float(max_health)
+	max_health = new_max_health
+	current_health = int(max_health * health_percentage) # Maintain health percentage
+
+func increase_max_health(amount: int):
+	"""Increase maximum health"""
+	set_max_health(max_health + amount)
+
+func increase_damage(amount: int):
+	"""Increase damage (subclasses can override for specific implementation)"""
+	# Base implementation - subclasses should override this
+	print("🔧 Base damage increase: ", amount)
+
+func increase_speed(amount: float):
+	"""Increase movement speed"""
+	move_speed += amount * 100 # Convert to actual speed units
+
+func reduce_cooldowns(amount: float):
+	"""Reduce ability cooldowns (subclasses can override)"""
+	# Base implementation - subclasses should override this
+	print("🔧 Base cooldown reduction: ", amount)
+
+func increase_defense(amount: int):
+	"""Increase defense (subclasses can override for specific implementation)"""
+	# Base implementation - subclasses should override this
+	print("🔧 Base defense increase: ", amount)

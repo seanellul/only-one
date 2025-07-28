@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://systems/upgrades/UpgradeUI.gd" id="1_8k9j3"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
-bg_color = Color(0.2, 0.15, 0.1, 0.95)
+bg_color = Color(0.0613468, 0.0379443, 0.0200988, 1)
 border_width_left = 3
 border_width_top = 3
 border_width_right = 3

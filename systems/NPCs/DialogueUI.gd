@@ -29,6 +29,7 @@ func _ready():
 	# Add to group so DialogueManager can find this UI
 	add_to_group("dialogue_ui")
 	
+	
 	# Store the original panel position before any animations
 	if dialogue_panel:
 		original_panel_position = dialogue_panel.position
@@ -40,6 +41,27 @@ func _ready():
 	is_visible = false
 	
 	print("💬 DialogueUI initialized")
+
+func _setup_lighting_immunity():
+	"""Make the dialogue UI immune to scene lighting"""
+	var unshaded_material = CanvasItemMaterial.new()
+	unshaded_material.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	
+	# Apply to the main dialogue panel
+	if dialogue_panel:
+		dialogue_panel.material = unshaded_material
+	
+	# Apply to text elements
+	if speaker_label:
+		speaker_label.material = unshaded_material
+	
+	if dialogue_text:
+		dialogue_text.material = unshaded_material
+	
+	if continue_prompt:
+		continue_prompt.material = unshaded_material
+	
+	print("💡 DialogueUI lighting immunity applied")
 
 # ===== DIALOGUE DISPLAY METHODS =====
 

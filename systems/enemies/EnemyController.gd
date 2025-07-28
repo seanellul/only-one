@@ -10,6 +10,9 @@ class_name EnemyController
 @export var ai_difficulty: int = 1
 @export var show_ai_debug: bool = false
 
+# ===== SIGNALS =====
+signal enemy_died(enemy: EnemyController)
+
 # AI State Machine
 enum AIState {
 	IDLE,
@@ -137,6 +140,9 @@ func _on_character_death():
 	
 	# Drop shadow essence when enemy dies
 	_drop_shadow_essence()
+	
+	# Emit death signal for level controller
+	enemy_died.emit(self)
 	
 	print("🚫 ", difficulty_name, " collision and AI systems disabled")
 
@@ -1249,11 +1255,8 @@ func _drop_shadow_essence():
 	# Multiply by difficulty level (1-5)
 	var essence_with_difficulty = base_essence * ai_difficulty
 	
-	# Apply essence extraction upgrade bonus
+	# Apply essence extraction upgrade bonus (simplified for now)
 	var extraction_rate = 1.0 # Base 100% (no bonus)
-	if UpgradeManager.get_instance():
-		var bonus_rate = UpgradeManager.get_instance().get_essence_extraction_rate()
-		extraction_rate = 1.0 + (bonus_rate / 100.0) # Convert percentage to multiplier
 	
 	# Calculate final essence amount
 	var final_essence = int(essence_with_difficulty * extraction_rate)

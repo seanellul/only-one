@@ -1,0 +1,107 @@
+[gd_scene load_steps=2 format=3 uid="uid://c9hjm8yjd5zlo"]
+
+[ext_resource type="Script" path="res://systems/main/CreditsController.gd" id="1_credits_script"]
+
+[node name="Credits" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_credits_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.05, 0.05, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="CreditsContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="GameTitle" type="Label" parent="CenterContainer/CreditsContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 56
+text = "UNUS TANTUM"
+horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="CenterContainer/CreditsContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 40)
+
+[node name="DeveloperLabel" type="Label" parent="CenterContainer/CreditsContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 32
+text = "Developed by Sean Ellul"
+horizontal_alignment = 1
+
+[node name="GameJamLabel" type="Label" parent="CenterContainer/CreditsContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 24
+text = "Created for Pirate17 Game Jam"
+horizontal_alignment = 1
+
+[node name="Spacer2" type="Control" parent="CenterContainer/CreditsContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 30)
+
+[node name="ConceptLabel" type="Label" parent="CenterContainer/CreditsContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 20
+text = "Inspired by Carl Jung's concepts of"
+horizontal_alignment = 1
+
+[node name="ConceptLabel2" type="Label" parent="CenterContainer/CreditsContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 20
+text = "the shadow self and individuation"
+horizontal_alignment = 1
+
+[node name="Spacer3" type="Control" parent="CenterContainer/CreditsContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 30)
+
+[node name="EngineLabel" type="Label" parent="CenterContainer/CreditsContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+theme_override_font_sizes/font_size = 18
+text = "Made with Godot Engine"
+horizontal_alignment = 1
+
+[node name="Spacer4" type="Control" parent="CenterContainer/CreditsContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 50)
+
+[node name="BackButton" type="Button" parent="CenterContainer/CreditsContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(200, 50)
+theme_override_font_sizes/font_size = 24
+text = "Back to Menu"
+
+[node name="FadeOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0)
+mouse_filter = 2 

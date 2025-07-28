@@ -1,4 +1,4 @@
-[gd_scene load_steps=2060 format=3 uid="uid://bwd0k3vdhvqyc"]
+[gd_scene load_steps=2054 format=3 uid="uid://bwd0k3vdhvqyc"]
 
 [ext_resource type="Texture2D" uid="uid://d2xlvn7v5raof" path="res://art/sprites/knight_2/Run.png" id="1_encq8"]
 [ext_resource type="Script" path="res://systems/player/PlayerController.gd" id="1_player_script"]
@@ -3684,14 +3684,6 @@ region = Rect2(256, 320, 64, 64)
 atlas = ExtResource("1_encq8")
 region = Rect2(320, 320, 64, 64)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_uu8fw"]
-atlas = ExtResource("1_encq8")
-region = Rect2(384, 320, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_p3sti"]
-atlas = ExtResource("1_encq8")
-region = Rect2(448, 320, 64, 64)
-
 [sub_resource type="AtlasTexture" id="AtlasTexture_leby5"]
 atlas = ExtResource("1_encq8")
 region = Rect2(512, 320, 64, 64)
@@ -4643,14 +4635,6 @@ region = Rect2(320, 128, 64, 64)
 [sub_resource type="AtlasTexture" id="AtlasTexture_wvkp0"]
 atlas = ExtResource("4_kv58d")
 region = Rect2(384, 128, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_a4xsd"]
-atlas = ExtResource("4_kv58d")
-region = Rect2(448, 128, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_qx2e7"]
-atlas = ExtResource("4_kv58d")
-region = Rect2(512, 128, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_51lsq"]
 atlas = ExtResource("4_kv58d")
@@ -6563,14 +6547,6 @@ region = Rect2(320, 192, 64, 64)
 [sub_resource type="AtlasTexture" id="AtlasTexture_7bqyc"]
 atlas = ExtResource("5_obccn")
 region = Rect2(384, 192, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_keo10"]
-atlas = ExtResource("5_obccn")
-region = Rect2(448, 192, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_npw8r"]
-atlas = ExtResource("5_obccn")
-region = Rect2(512, 192, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_irxfk"]
 atlas = ExtResource("5_obccn")
@@ -11198,12 +11174,6 @@ animations = [{
 "texture": SubResource("AtlasTexture_75km6")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_uu8fw")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_p3sti")
-}, {
-"duration": 1.0,
 "texture": SubResource("AtlasTexture_leby5")
 }, {
 "duration": 1.0,
@@ -11996,12 +11966,6 @@ animations = [{
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_wvkp0")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_a4xsd")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_qx2e7")
 }, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_51lsq")
@@ -13598,12 +13562,6 @@ animations = [{
 "texture": SubResource("AtlasTexture_7bqyc")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_keo10")
-}, {
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_npw8r")
-}, {
-"duration": 1.0,
 "texture": SubResource("AtlasTexture_irxfk")
 }, {
 "duration": 1.0,
@@ -14969,11 +14927,14 @@ size_flags_vertical = 8
 [node name="PlayerUI" parent="Camera2D" instance=ExtResource("20_playerui")]
 
 [node name="UpgradeUI" parent="Camera2D" instance=ExtResource("21_6jwdt")]
+process_mode = 0
+visible = false
 scale = Vector2(0.25, 0.25)
 
 [node name="PlayerUpgrades" type="Node" parent="."]
 
 [node name="PlayerInteractionArea" type="Area2D" parent="."]
+collision_mask = 2
 script = ExtResource("2_interaction")
 
 [node name="InteractionCollision" type="CollisionShape2D" parent="PlayerInteractionArea"]

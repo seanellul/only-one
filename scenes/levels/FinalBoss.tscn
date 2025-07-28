@@ -1,0 +1,201 @@
+[gd_scene load_steps=5 format=3 uid="uid://d2ny62asxfw1"]
+
+[ext_resource type="Script" path="res://systems/levels/FinalBossController.gd" id="1_boss_script"]
+[ext_resource type="PackedScene" uid="uid://bwd0k3vdhvqyc" path="res://scenes/player/Player.tscn" id="2_player_scene"]
+[ext_resource type="PackedScene" uid="uid://c31atncmp20q0" path="res://scenes/enemies/Enemy.tscn" id="3_boss_scene"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0, 0, 0, 0.7)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.6, 0.6, 1)
+
+[node name="FinalBoss" type="Node2D"]
+script = ExtResource("1_boss_script")
+
+[node name="Environment" type="Node2D" parent="."]
+
+[node name="Background" type="ColorRect" parent="Environment"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.02, 0.02, 0.08, 1)
+
+[node name="Arena" type="Node2D" parent="Environment"]
+
+[node name="ArenaFloor" type="ColorRect" parent="Environment/Arena"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -250.0
+offset_right = 400.0
+offset_bottom = 250.0
+color = Color(0.15, 0.1, 0.2, 1)
+
+[node name="BossSpawnPoint" type="Marker2D" parent="Environment/Arena"]
+position = Vector2(640, 200)
+
+[node name="Characters" type="Node2D" parent="."]
+
+[node name="Player" parent="Characters" instance=ExtResource("2_player_scene")]
+position = Vector2(640, 500)
+
+[node name="Boss" parent="Characters" instance=ExtResource("3_boss_scene")]
+position = Vector2(640, 200)
+ai_difficulty = null
+show_ai_debug = null
+target_lost_timeout = null
+difficulty_color_tint = null
+difficulty_name = null
+shadow_mode = null
+shadow_intensity = null
+shadow_preserve_alpha = null
+shadow_add_outline = null
+fade_after_death = null
+death_fade_opacity = null
+death_fade_duration = null
+use_sprite_effects = null
+move_speed = null
+acceleration = null
+friction = null
+forward_speed_modifier = null
+backward_speed_modifier = null
+strafe_speed_modifier = null
+forward_threshold = null
+backward_threshold = null
+turn_detection_threshold = null
+transition_smoothing = null
+roll_cooldown_duration = null
+roll_speed = null
+roll_momentum_decay = null
+max_roll_distance = null
+roll_input_grace_period = null
+minimum_roll_duration = null
+max_health = null
+melee_combo_window = null
+q_ability_cooldown = null
+r_ability_cooldown = null
+shield_cone_angle = null
+shield_debug = null
+hitbox_activation_delay = null
+hitbox_active_duration = null
+melee_hitbox_size = null
+melee_hitbox_offset = null
+base_ability_hitbox_radius = null
+sfx_enabled = null
+show_hitbox_debug = null
+melee_hitbox_start_frame = null
+melee_hitbox_end_frame = null
+ability_hitbox_start_frame = null
+ability_hitbox_end_frame = null
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="Lighting" type="Node2D" parent="."]
+
+[node name="DirectionalLight" type="DirectionalLight2D" parent="Lighting"]
+energy = 0.4
+shadow_enabled = true
+
+[node name="BossLight" type="PointLight2D" parent="Lighting"]
+position = Vector2(640, 200)
+color = Color(0.8, 0.3, 0.3, 1)
+energy = 2.0
+range_item_cull_mask = 2
+shadow_enabled = true
+texture_scale = 3.0
+
+[node name="PlayerLight" type="PointLight2D" parent="Lighting"]
+position = Vector2(640, 500)
+color = Color(0.3, 0.3, 0.8, 1)
+energy = 1.5
+range_item_cull_mask = 2
+shadow_enabled = true
+texture_scale = 2.0
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="GameUI" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TopCenter" type="VBoxContainer" parent="UI/GameUI"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 20.0
+offset_right = 300.0
+offset_bottom = 100.0
+grow_horizontal = 2
+
+[node name="BossTitle" type="Label" parent="UI/GameUI/TopCenter"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 36
+text = "The Final Shadow"
+horizontal_alignment = 1
+
+[node name="BossHealthBar" type="ProgressBar" parent="UI/GameUI/TopCenter"]
+custom_minimum_size = Vector2(400, 30)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+value = 100.0
+show_percentage = false
+
+[node name="DialogueBox" type="Panel" parent="UI/GameUI"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -150.0
+offset_right = 400.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="DialogueText" type="RichTextLabel" parent="UI/GameUI/DialogueBox"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/default_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/normal_font_size = 20
+bbcode_enabled = true
+text = "The final shadow speaks..."
+fit_content = true
+
+[node name="FadeOverlay" type="ColorRect" parent="UI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="AudioManager" type="Node" parent="."]
