@@ -1,0 +1,93 @@
+[gd_scene load_steps=3 format=3 uid="uid://xa4ofp8ykhyc"]
+
+[ext_resource type="Script" path="res://systems/test/ParticleTestController.gd" id="1_0m7nq"]
+[ext_resource type="Script" path="res://systems/CombatParticleManager.gd" id="2_j8r4x"]
+
+[node name="ParticleTestScene" type="Node2D"]
+position = Vector2(71, 319)
+script = ExtResource("1_0m7nq")
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = -20.0
+grow_vertical = 0
+
+[node name="Title" type="Label" parent="UI/VBoxContainer"]
+layout_mode = 2
+text = "Combat Particle System Test"
+horizontal_alignment = 1
+
+[node name="Separator1" type="HSeparator" parent="UI/VBoxContainer"]
+layout_mode = 2
+
+[node name="WhirlwindButton" type="Button" parent="UI/VBoxContainer"]
+layout_mode = 2
+text = "Test Whirlwind Effect"
+
+[node name="ShockwaveButton" type="Button" parent="UI/VBoxContainer"]
+layout_mode = 2
+text = "Test Shockwave Effect"
+
+[node name="AllEffectsButton" type="Button" parent="UI/VBoxContainer"]
+layout_mode = 2
+text = "Test All Effects"
+
+[node name="Separator2" type="HSeparator" parent="UI/VBoxContainer"]
+layout_mode = 2
+
+[node name="ToggleParticlesButton" type="Button" parent="UI/VBoxContainer"]
+layout_mode = 2
+text = "Toggle Particles: ON"
+
+[node name="DebugButton" type="Button" parent="UI/VBoxContainer"]
+layout_mode = 2
+text = "Toggle Debug Mode"
+
+[node name="Separator3" type="HSeparator" parent="UI/VBoxContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="UI/VBoxContainer"]
+layout_mode = 2
+text = "Status: Ready"
+
+[node name="Separator4" type="HSeparator" parent="UI/VBoxContainer"]
+layout_mode = 2
+
+[node name="DemoButton" type="Button" parent="UI/VBoxContainer"]
+layout_mode = 2
+text = "Run Effects Demo"
+
+[node name="IntenseWhirlwindButton" type="Button" parent="UI/VBoxContainer"]
+layout_mode = 2
+text = "Test Intense Whirlwind"
+
+[node name="BigShockwaveButton" type="Button" parent="UI/VBoxContainer"]
+layout_mode = 2
+text = "Test Big Shockwave"
+
+[node name="ParticleManager" type="Node2D" parent="."]
+script = ExtResource("2_j8r4x")
+debug_particles = true
+
+[connection signal="pressed" from="UI/VBoxContainer/WhirlwindButton" to="." method="_on_whirlwind_button_pressed"]
+[connection signal="pressed" from="UI/VBoxContainer/ShockwaveButton" to="." method="_on_shockwave_button_pressed"]
+[connection signal="pressed" from="UI/VBoxContainer/AllEffectsButton" to="." method="_on_all_effects_button_pressed"]
+[connection signal="pressed" from="UI/VBoxContainer/ToggleParticlesButton" to="." method="_on_toggle_particles_button_pressed"]
+[connection signal="pressed" from="UI/VBoxContainer/DebugButton" to="." method="_on_debug_button_pressed"]
+[connection signal="pressed" from="UI/VBoxContainer/DemoButton" to="." method="_on_demo_button_pressed"]
+[connection signal="pressed" from="UI/VBoxContainer/IntenseWhirlwindButton" to="." method="_on_intense_whirlwind_button_pressed"]
+[connection signal="pressed" from="UI/VBoxContainer/BigShockwaveButton" to="." method="_on_big_shockwave_button_pressed"]

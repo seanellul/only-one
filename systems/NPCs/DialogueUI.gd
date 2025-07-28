@@ -17,6 +17,7 @@ var is_visible: bool = false
 var current_speaker: String = ""
 var typing_tween: Tween
 var is_typing: bool = false
+var original_panel_position: Vector2 # Store the original position to prevent drift
 
 # ===== TYPING ANIMATION SETTINGS =====
 @export var typing_speed: float = 30.0 # Characters per second
@@ -25,6 +26,13 @@ var is_typing: bool = false
 # ===== INITIALIZATION =====
 
 func _ready():
+	# Add to group so DialogueManager can find this UI
+	add_to_group("dialogue_ui")
+	
+	# Store the original panel position before any animations
+	if dialogue_panel:
+		original_panel_position = dialogue_panel.position
+	
 	# Start hidden
 	hide_dialogue()
 	
@@ -58,27 +66,40 @@ func hide_dialogue():
 	"""Hide the dialogue UI"""
 	if is_visible:
 		_animate_hide()
+	else:
+		# Ensure it's hidden even if not currently showing
+		visible = false
+		is_visible = false
+		
+		# Reset position to prevent drift (safety check)
+		if dialogue_panel:
+			dialogue_panel.position = original_panel_position
+			dialogue_panel.modulate.a = 1.0
 
 func _animate_show():
 	"""Animate the dialogue panel appearing"""
 	is_visible = true
 	visible = true
 	
-	# Start from bottom of screen
-	dialogue_panel.position.y = 50
+	# Use the stored original position instead of current position to prevent drift
+	var target_y = original_panel_position.y
+	
+	# Start from below the visible area
+	dialogue_panel.position.y = target_y + 100
 	dialogue_panel.modulate.a = 0.0
 	
 	# Animate to proper position
 	var show_tween = create_tween()
-	show_tween.parallel().tween_property(dialogue_panel, "position:y", -150, 0.3)
+	show_tween.parallel().tween_property(dialogue_panel, "position:y", target_y, 0.3)
 	show_tween.parallel().tween_property(dialogue_panel, "modulate:a", 1.0, 0.3)
 	show_tween.set_ease(Tween.EASE_OUT)
 	show_tween.set_trans(Tween.TRANS_BACK)
 
 func _animate_hide():
 	"""Animate the dialogue panel disappearing"""
+	var target_y = original_panel_position.y
 	var hide_tween = create_tween()
-	hide_tween.parallel().tween_property(dialogue_panel, "position:y", 50, 0.2)
+	hide_tween.parallel().tween_property(dialogue_panel, "position:y", target_y + 100, 0.2)
 	hide_tween.parallel().tween_property(dialogue_panel, "modulate:a", 0.0, 0.2)
 	hide_tween.set_ease(Tween.EASE_IN)
 	hide_tween.set_trans(Tween.TRANS_CUBIC)
@@ -89,6 +110,12 @@ func _on_hide_complete():
 	"""Called when hide animation completes"""
 	visible = false
 	is_visible = false
+	
+	# Reset position to original to prevent drift
+	if dialogue_panel:
+		dialogue_panel.position = original_panel_position
+		dialogue_panel.modulate.a = 1.0 # Reset alpha for next show
+	
 	dialogue_ui_closed.emit()
 
 # ===== TYPING ANIMATION =====

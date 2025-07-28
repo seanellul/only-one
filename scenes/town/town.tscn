@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=4 uid="uid://b0iapoes16fgy"]
+[gd_scene load_steps=12 format=4 uid="uid://b0iapoes16fgy"]
 
 [ext_resource type="TileSet" uid="uid://c1234568aa0" path="res://scenes/town/town_tileset.tres" id="1"]
 [ext_resource type="Texture2D" uid="uid://cwqhgf1hfv68x" path="res://scenes/town/ChatGPT Image Jul 25, 2025, 05_26_40 PM.png" id="1_2818q"]
@@ -6,6 +6,9 @@
 [ext_resource type="Texture2D" uid="uid://cn3tenlx25pwa" path="res://art/splash/ChatGPT Image Jul 25, 2025, 04_22_34 PM.png" id="3_f3723"]
 [ext_resource type="PackedScene" path="res://scenes/town/Collider.tscn" id="4_q3wnq"]
 [ext_resource type="PackedScene" uid="uid://cfjo1bhhno0y5" path="res://scenes/NPCs/Carl.tscn" id="5_carl"]
+[ext_resource type="PackedScene" uid="uid://e7j77cyybdf1" path="res://scenes/NPCs/Ego.tscn" id="6_ego"]
+[ext_resource type="Script" path="res://systems/NPCs/DialogueManager.gd" id="7_dialogue_manager"]
+[ext_resource type="PackedScene" uid="uid://b3u5be6p0mb1g" path="res://scenes/town/altar.tscn" id="9_7pc1b"]
 
 [sub_resource type="Gradient" id="Gradient_0mdca"]
 offsets = PackedFloat32Array(0, 0.714286)
@@ -36,10 +39,19 @@ use_parent_material = true
 tile_map_data = PackedByteArray("AAADAP7/CAADAAIAAAADAP//CAADAAIAAAADAAAACAADAAIAAAADAAEACAADAAIAAAADAAIACAADAAIAAAADAAMACAADAAIAAAADAAQACAADAAIAAAADAAUACAADAAIAAAADAAYACAADAAIAAAADAAcACAADAAIAAAADAAgACAADAAIAAAACAAcACAADAAIAAAACAAUACAADAAIAAAACAAMACAADAAIAAAADAAkACAADAAIAAAADAAoACAADAAIAAAADAAsACAADAAIAAAADAP3/CAADAAIAAAADAPz/CAADAAIAAAA=")
 tile_set = ExtResource("1")
 
+[node name="UpgradeAltar" parent="." instance=ExtResource("9_7pc1b")]
+position = Vector2(298, -43)
+
 [node name="Player" parent="." instance=ExtResource("2_chdpn")]
 
 [node name="Carl" parent="." instance=ExtResource("5_carl")]
 position = Vector2(150, -100)
+
+[node name="Ego" parent="." instance=ExtResource("6_ego")]
+position = Vector2(-100, -50)
+
+[node name="DialogueManager" type="Node" parent="."]
+script = ExtResource("7_dialogue_manager")
 
 [node name="PointLight2D" type="PointLight2D" parent="."]
 position = Vector2(0, 58)

@@ -33,12 +33,26 @@ func _enter_tree():
 func get_dialogue_ui() -> DialogueUI:
 	"""Get or create the dialogue UI instance"""
 	if not dialogue_ui_instance or not is_instance_valid(dialogue_ui_instance):
+		print("🔍 Searching for DialogueUI...")
 		_create_dialogue_ui()
+	
+	if dialogue_ui_instance:
+		print("✅ DialogueUI found and ready")
+	else:
+		print("❌ DialogueUI not found!")
 	
 	return dialogue_ui_instance
 
 func _create_dialogue_ui():
-	"""Create the dialogue UI and add it to the scene tree"""
+	"""Find the existing DialogueUI in the scene or create one"""
+	# First try to find existing DialogueUI (attached to camera)
+	dialogue_ui_instance = _find_existing_dialogue_ui()
+	
+	if dialogue_ui_instance:
+		print("💬 Found existing DialogueUI in scene")
+		return
+	
+	# If not found, create one (fallback)
 	if dialogue_ui_scene:
 		dialogue_ui_instance = dialogue_ui_scene.instantiate() as DialogueUI
 		
@@ -50,6 +64,34 @@ func _create_dialogue_ui():
 	else:
 		print("⚠️ DialogueUI scene not found!")
 
+func _find_existing_dialogue_ui() -> DialogueUI:
+	"""Find DialogueUI that's already in the scene (e.g., attached to camera)"""
+	# Look for DialogueUI nodes in the scene tree
+	var dialogue_uis = get_tree().get_nodes_in_group("dialogue_ui")
+	if not dialogue_uis.is_empty():
+		return dialogue_uis[0] as DialogueUI
+	
+	# Fallback: search for DialogueUI by class name throughout the scene
+	var current_scene = get_tree().current_scene
+	if current_scene:
+		var found_ui = _search_for_dialogue_ui_recursive(current_scene)
+		if found_ui:
+			return found_ui
+	
+	return null
+
+func _search_for_dialogue_ui_recursive(node: Node) -> DialogueUI:
+	"""Recursively search for DialogueUI in the scene tree"""
+	if node is DialogueUI:
+		return node as DialogueUI
+	
+	for child in node.get_children():
+		var found = _search_for_dialogue_ui_recursive(child)
+		if found:
+			return found
+	
+	return null
+
 # ===== NPC REGISTRATION =====
 
 func register_npc(npc: DialogueSystem):
@@ -57,16 +99,21 @@ func register_npc(npc: DialogueSystem):
 	if not npc:
 		return
 	
+	print("📋 Attempting to register NPC: ", npc.character_name)
+	
 	# Connect the NPC to the dialogue UI
 	var ui = get_dialogue_ui()
 	if ui:
 		npc.dialogue_ui = ui
+		print("✅ Connected ", npc.character_name, " to DialogueUI")
 		
 		# Connect NPC signals to manager
 		npc.dialogue_started.connect(_on_dialogue_started)
 		npc.dialogue_ended.connect(_on_dialogue_ended)
 		
-		print("🔗 Registered NPC: ", npc.character_name)
+		print("🔗 Successfully registered NPC: ", npc.character_name)
+	else:
+		print("❌ Failed to get DialogueUI for ", npc.character_name)
 
 func unregister_npc(npc: DialogueSystem):
 	"""Unregister an NPC from the dialogue system"""

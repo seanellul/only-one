@@ -13,7 +13,6 @@ offset_left = 10.0
 offset_top = -150.0
 offset_right = 350.0
 offset_bottom = -10.0
-color = Color(0, 0, 0, 0.7)
 
 [node name="VBox" type="VBoxContainer" parent="DebugPanel"]
 layout_mode = 1
@@ -24,33 +23,35 @@ offset_left = 10.0
 offset_top = 10.0
 offset_right = -10.0
 offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Title" type="Label" parent="DebugPanel/VBox"]
 layout_mode = 2
-text = "Combat System Debug"
 theme_override_colors/font_color = Color(1, 1, 0, 1)
 theme_override_font_sizes/font_size = 14
+text = "Combat System Debug"
 
 [node name="HSeparator" type="HSeparator" parent="DebugPanel/VBox"]
 layout_mode = 2
 
 [node name="CombatState" type="Label" parent="DebugPanel/VBox"]
 layout_mode = 2
-text = "State: idle"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 12
+text = "State: idle"
 
 [node name="MeleeInfo" type="Label" parent="DebugPanel/VBox"]
 layout_mode = 2
-text = "Melee: 0/3"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 12
+text = "Melee: 0/3"
 
 [node name="AbilityCooldowns" type="Label" parent="DebugPanel/VBox"]
 layout_mode = 2
-text = "Q: Ready | R: Ready"
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 12
+text = "Q: Ready | R: Ready"
 
 [node name="ShieldInfo" type="Label" parent="DebugPanel/VBox"]
 layout_mode = 2
@@ -74,4 +75,4 @@ text = "Hitboxes: M:(40, 20) A:r40.0"
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 10
-text = "LClick: Attack | RClick (Hold): Shield | Q/R: Abilities" 
+text = "LClick: Attack | RClick (Hold): Shield | Q/R: Abilities"

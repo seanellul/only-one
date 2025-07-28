@@ -194,7 +194,7 @@ script = ExtResource("1_5dqhk")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_1h4yq")
 animation = &"talking"
-frame_progress = 0.654695
+frame_progress = 0.559415
 
 [node name="InteractionArea" type="Area2D" parent="."]
 

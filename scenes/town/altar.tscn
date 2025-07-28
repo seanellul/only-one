@@ -1,0 +1,56 @@
+[gd_scene load_steps=3 format=3 uid="uid://b3u5be6p0mb1g"]
+
+[ext_resource type="Script" path="res://systems/upgrades/UpgradeAltar.gd" id="1_altar"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 80.0
+
+[node name="UpgradeAltar" type="Node2D" groups=["upgrade_altars"]]
+script = ExtResource("1_altar")
+
+[node name="VisualIndicator" type="ColorRect" parent="."]
+offset_left = -32.0
+offset_top = -32.0
+offset_right = 32.0
+offset_bottom = 32.0
+color = Color(1, 1, 0, 0.8)
+
+[node name="AltarLabel" type="Label" parent="."]
+offset_left = -52.0
+offset_top = -51.0
+offset_right = 61.0
+offset_bottom = -31.0
+theme_override_colors/font_color = Color(1, 0.8, 0.3, 1)
+theme_override_font_sizes/font_size = 14
+text = "UPGRADE ALTAR"
+horizontal_alignment = 1
+
+[node name="InteractionArea" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea"]
+shape = SubResource("CircleShape2D_1")
+debug_color = Color(0, 1, 0, 0.2)
+
+[node name="PromptLabel" type="Label" parent="."]
+offset_left = -60.0
+offset_top = -80.0
+offset_right = 60.0
+offset_bottom = -60.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 12
+text = "Press E to upgrade"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GlowEffect" type="ColorRect" parent="."]
+z_index = -1
+offset_left = -34.0
+offset_top = -34.0
+offset_right = 34.0
+offset_bottom = 34.0
+color = Color(1, 1, 0, 0.3)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]

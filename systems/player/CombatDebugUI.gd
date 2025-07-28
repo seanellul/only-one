@@ -61,7 +61,7 @@ func _update_combat_status():
 	
 	# Update shield info
 	if shield_info_label:
-		var shield_text = "Shield: " + status.shield_state
+		var shield_text = "Shield: " + status.shield_status
 		if status.is_shield_active:
 			shield_text += " (ACTIVE)"
 		shield_info_label.text = shield_text

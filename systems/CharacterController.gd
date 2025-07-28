@@ -6,6 +6,9 @@
 extends CharacterBody2D
 class_name CharacterController
 
+# ===== EFFECT SYSTEM TOGGLE =====
+@export var use_sprite_effects: bool = false # Toggle between sprite effects (true) and particles (false)
+
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 
 # ===== MOVEMENT SYSTEM =====
@@ -68,7 +71,7 @@ var roll_input_buffer_timer: float = 0.0 # Timer for roll input buffering
 # ===== COMBAT SYSTEM =====
 # Combat state variables
 var is_attacking: bool = false
-var is_shielding: bool = false
+var is_shielding: bool = false # Single source of truth for shield state
 var combat_state: String = "idle" # idle, melee, ability, shield, take_damage, death
 
 # Health and damage system
@@ -103,10 +106,7 @@ var ability_timer: float = 0.0
 var ability_duration: float = 1.0 # Duration of ability animations
 var current_ability: String = "" # "1" or "2"
 
-# Shield system
-var shield_state: String = "none" # none, active, ending
-var shield_timer: float = 0.0
-@export var shield_end_duration: float = 0.2 # Reduced end duration for snappier feel
+# Shield system - SIMPLIFIED AND FIXED
 var is_shield_active: bool = false # True when shield can block attacks
 @export var shield_cone_angle: float = 120.0 # Degrees of protection cone (120° = 60° each side)
 @export var shield_debug: bool = false # Enable shield debugging
@@ -123,17 +123,16 @@ var attack_direction: Vector2 = Vector2.ZERO # Direction of current attack (for 
 @export_group("Hitbox Sizes")
 @export var melee_hitbox_size: Vector2 = Vector2(40, 20) # Configurable melee hitbox size
 @export var melee_hitbox_offset: Vector2 = Vector2(30, 0) # Offset in front of character
-@export var ability_hitbox_radius: float = 40.0 # Configurable ability hitbox radius
+@export var base_ability_hitbox_radius: float = 40.0 # Base ability hitbox radius (before upgrades)
+var ability_hitbox_radius: float = 40.0 # Current ability hitbox radius (with upgrades)
 
 # Miss sound detection
 var current_attack_hit_something: bool = false
 var current_hitbox_ability_type: String = "" # Store ability type for miss sound detection
 
-# ===== PARTICLE EFFECTS =====
-@onready var whirlwind_particles: GPUParticles2D
-@onready var shockwave_particles: GPUParticles2D
-@export var particles_enabled: bool = true # Toggle for particle effects
-@export var particle_activation_delay: float = 0.25 # Delay before particles start
+# ===== VISUAL EFFECTS =====
+@onready var effect_manager: CombatEffectManager
+@onready var particle_manager: CombatParticleManager
 
 # ===== SFX SYSTEM =====
 @onready var sfx_manager: CombatSFXManager
@@ -190,8 +189,8 @@ func _ready():
 	# Setup hitboxes for combat
 	_setup_hitboxes()
 	
-	# Setup particle effects
-	_setup_particle_effects()
+	# Setup visual effects
+	_setup_effect_manager()
 	
 	# Setup SFX system
 	_setup_sfx_system()
@@ -202,6 +201,12 @@ func _ready():
 	
 	# Initialize health
 	current_health = max_health
+	
+	# Initialize ability radius with base value
+	ability_hitbox_radius = base_ability_hitbox_radius
+	
+	# Setup upgrade system integration
+	_setup_upgrade_system()
 	
 	# Start with a default facing direction
 	current_facing_direction = Vector2.RIGHT
@@ -332,74 +337,20 @@ func _setup_hitboxes():
 	print("  Melee hitbox: size=%s, offset=%s" % [melee_hitbox_size, melee_hitbox_offset])
 	print("  Ability hitbox: radius=%.1f" % ability_hitbox_radius)
 
-func _setup_particle_effects():
-	# Create whirlwind particle effect (for 3rd melee attack and Q ability)
-	whirlwind_particles = GPUParticles2D.new()
-	whirlwind_particles.name = "WhirlwindParticles"
-	whirlwind_particles.emitting = false
-	whirlwind_particles.amount = 50
-	whirlwind_particles.lifetime = 0.5
-	whirlwind_particles.position = Vector2.ZERO
-	add_child(whirlwind_particles)
-	
-	# Configure whirlwind particle process material
-	var whirlwind_material = ParticleProcessMaterial.new()
-	whirlwind_material.direction = Vector3(0, -1, 0)
-	whirlwind_material.initial_velocity_min = 50.0
-	whirlwind_material.initial_velocity_max = 100.0
-	whirlwind_material.angular_velocity_min = 180.0
-	whirlwind_material.angular_velocity_max = 360.0
-	whirlwind_material.orbit_velocity_min = 2.0
-	whirlwind_material.orbit_velocity_max = 4.0
-	whirlwind_material.scale_min = 0.3
-	whirlwind_material.scale_max = 0.8
-	whirlwind_material.color = Color.WHITE
-	whirlwind_material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
-	whirlwind_material.emission_ring_radius = 30.0
-	whirlwind_material.emission_ring_inner_radius = 10.0
-	whirlwind_particles.process_material = whirlwind_material
-	
-	# Add a simple white texture for visibility
-	var white_texture = ImageTexture.new()
-	var white_image = Image.create(4, 4, false, Image.FORMAT_RGBA8)
-	white_image.fill(Color.WHITE)
-	white_texture.set_image(white_image)
-	whirlwind_particles.texture = white_texture
-	
-	# Create shockwave particle effect (for R ability)
-	shockwave_particles = GPUParticles2D.new()
-	shockwave_particles.name = "ShockwaveParticles"
-	shockwave_particles.emitting = false
-	shockwave_particles.amount = 80
-	shockwave_particles.lifetime = 0.8
-	shockwave_particles.position = Vector2.ZERO
-	add_child(shockwave_particles)
-	
-	# Configure shockwave particle process material for radial explosion effect
-	var shockwave_material = ParticleProcessMaterial.new()
-	shockwave_material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	shockwave_material.emission_sphere_radius = 5.0 # Small starting radius
-	shockwave_material.direction = Vector3(0, 0, 0) # No initial direction bias
-	shockwave_material.spread = 360.0 # Full 360-degree spread
-	shockwave_material.initial_velocity_min = 120.0
-	shockwave_material.initial_velocity_max = 200.0
-	shockwave_material.gravity = Vector3(0, 0, 0) # No gravity for clean explosion
-	shockwave_material.scale_min = 0.3
-	shockwave_material.scale_max = 1.2
-	shockwave_material.scale_over_velocity_min = 0.0
-	shockwave_material.scale_over_velocity_max = 0.0
-	shockwave_material.color = Color.BROWN
-	# Remove radial velocity settings that were causing eastward movement
-	shockwave_particles.process_material = shockwave_material
-	
-	# Add a simple brown texture for visibility
-	var brown_texture = ImageTexture.new()
-	var brown_image = Image.create(4, 4, false, Image.FORMAT_RGBA8)
-	brown_image.fill(Color.BROWN)
-	brown_texture.set_image(brown_image)
-	shockwave_particles.texture = brown_texture
-	
-	print("✨ Particle effects initialized")
+func _setup_effect_manager():
+	# Setup visual effects based on toggle
+	if use_sprite_effects:
+		# Create new sprite-based effect manager
+		effect_manager = CombatEffectManager.new()
+		effect_manager.name = "CombatEffectManager"
+		add_child(effect_manager)
+		print("✨ Sprite effect manager initialized")
+	else:
+		# Create traditional particle manager
+		particle_manager = CombatParticleManager.new()
+		particle_manager.name = "CombatParticleManager"
+		add_child(particle_manager)
+		print("✨ Particle manager initialized (legacy mode)")
 
 func _setup_sfx_system():
 	# Create SFX manager for combat sounds
@@ -449,10 +400,7 @@ func _update_combat_timers(delta):
 		if roll_timer <= 0:
 			_complete_roll()
 	
-	# Shield system timers
-	if shield_timer > 0:
-		shield_timer -= delta
-		_handle_shield_states()
+	# Shield system (no timers needed in simplified system)
 	
 	# Damage animation timer
 	if damage_timer > 0:
@@ -610,37 +558,25 @@ func _deactivate_ability_hitbox():
 # ===== SHIELD SYSTEM =====
 
 func _can_start_shield() -> bool:
-	return not is_attacking and not is_using_ability and not is_rolling and not is_taking_damage and not is_dead and shield_state == "none"
+	return not is_attacking and not is_using_ability and not is_rolling and not is_taking_damage and not is_dead and not is_shielding
 
 func _start_shield():
 	if shield_debug:
 		print("🛡️ Shield activated immediately")
 	is_shielding = true
-	shield_state = "active"
 	is_shield_active = true # IMMEDIATE activation for responsiveness
 	combat_state = "shield"
 
-func _handle_shield_states():
-	match shield_state:
-		"ending":
-			if shield_timer <= 0:
-				_complete_shield()
-
 func _end_shield():
-	if shield_state != "ending": # Prevent double-ending
-		if shield_debug:
-			print("🛡️ Ending shield")
-		shield_state = "ending"
-		shield_timer = shield_end_duration
-		is_shield_active = false
+	if shield_debug:
+		print("🛡️ Ending shield")
+	is_shielding = false
+	is_shield_active = false
+	combat_state = "idle"
 
 func _complete_shield():
-	if shield_debug:
-		print("✅ Shield complete")
-	is_shielding = false
-	shield_state = "none"
-	combat_state = "idle"
-	is_shield_active = false
+	# This function is now redundant as _end_shield handles completion
+	pass
 
 # ===== ROLLING SYSTEM =====
 
@@ -833,32 +769,22 @@ func _complete_death_animation():
 # ===== PARTICLE EFFECTS =====
 
 func _trigger_whirlwind_effect():
-	if particles_enabled and whirlwind_particles:
-		await get_tree().create_timer(particle_activation_delay).timeout
-		whirlwind_particles.restart()
-		print("🌪️ Whirlwind effect triggered")
-		
-		# FIXED: Stop particles after 1.5 seconds
-		await get_tree().create_timer(1.5).timeout
-		whirlwind_particles.emitting = false
-		print("🌪️ Whirlwind effect stopped")
+	if use_sprite_effects and effect_manager:
+		effect_manager.trigger_whirlwind_effect()
+	elif not use_sprite_effects and particle_manager:
+		particle_manager.trigger_whirlwind_effect()
 
 func _trigger_shockwave_effect():
-	if particles_enabled and shockwave_particles:
-		await get_tree().create_timer(particle_activation_delay).timeout
-		shockwave_particles.restart()
-		print("💥 Shockwave effect triggered")
-		
-		# FIXED: Stop particles after 1.5 seconds
-		await get_tree().create_timer(1.5).timeout
-		shockwave_particles.emitting = false
-		print("💥 Shockwave effect stopped")
+	if use_sprite_effects and effect_manager:
+		effect_manager.trigger_shockwave_effect()
+	elif not use_sprite_effects and particle_manager:
+		particle_manager.trigger_shockwave_effect()
 
 # ===== ANIMATION SYSTEM =====
 
 func _update_animation():
 	if not animated_sprite:
-		print("🎬 ERROR: No animated_sprite found!")
+		# print("🎬 ERROR: No animated_sprite found!")
 		return
 	
 	# Get direction names for animation
@@ -889,7 +815,7 @@ func _update_animation():
 		movement_type = "" # No additional type needed
 	elif is_shielding:
 		movement_name = "shield"
-		movement_type = shield_state # active, ending
+		movement_type = "active" # Always active
 	elif is_moving and current_movement_direction != Vector2.ZERO:
 		# FIXED: Detect strafing vs running
 		var facing_dot = current_facing_direction.dot(current_movement_direction)
@@ -914,7 +840,7 @@ func _update_animation():
 	
 	# Update animation with smoothing
 	if ideal_animation != current_animation:
-		print("🎬 ", current_animation, " → ", ideal_animation)
+		# print("🎬 ", current_animation, " → ", ideal_animation)
 		# TEMPORARY: Bypass smoothing for debugging
 		_change_animation(ideal_animation)
 
@@ -935,13 +861,13 @@ func _get_ideal_animation(facing_name: String, movement_name: String, movement_t
 	if animated_sprite.sprite_frames:
 		if current_animation == "": # Only show on first call
 			var available_animations = animated_sprite.sprite_frames.get_animation_names()
-			print("🎬 AVAILABLE: ", available_animations)
+			# print("🎬 AVAILABLE: ", available_animations)
 		
 		# Check if animation exists, otherwise use fallback
 		if animated_sprite.sprite_frames.has_animation(animation_name):
 			return animation_name
 		else:
-			print("🎬 MISSING: ", animation_name)
+			# print("🎬 MISSING: ", animation_name)
 			return _get_fallback_animation(facing_name, movement_name, movement_type)
 	else:
 		print("🎬 ERROR: No sprite_frames!")
@@ -961,7 +887,7 @@ func _get_fallback_animation(facing_name: String, movement_name: String, movemen
 			var run_fallbacks = _get_running_animation_fallbacks(facing_name, movement_type, available_animations)
 			for fallback in run_fallbacks:
 				if animated_sprite.sprite_frames.has_animation(fallback):
-					print("🎬 Using movement fallback: ", fallback)
+					# print("🎬 Using movement fallback: ", fallback)
 					return fallback
 		
 		"strafe":
@@ -969,7 +895,7 @@ func _get_fallback_animation(facing_name: String, movement_name: String, movemen
 			var strafe_fallbacks = _get_strafing_animation_fallbacks(facing_name, movement_type, available_animations)
 			for fallback in strafe_fallbacks:
 				if animated_sprite.sprite_frames.has_animation(fallback):
-					print("🎬 Using strafe fallback: ", fallback)
+					# print("🎬 Using strafe fallback: ", fallback)
 					return fallback
 		
 		"180":
@@ -981,7 +907,7 @@ func _get_fallback_animation(facing_name: String, movement_name: String, movemen
 			]
 			for fallback in turn_fallbacks:
 				if animated_sprite.sprite_frames.has_animation(fallback):
-					print("🎬 Using turn fallback: ", fallback)
+					# print("🎬 Using turn fallback: ", fallback)
 					return fallback
 		
 		"death":
@@ -1035,7 +961,7 @@ func _get_fallback_animation(facing_name: String, movement_name: String, movemen
 			
 			for fallback in action_fallbacks:
 				if animated_sprite.sprite_frames.has_animation(fallback):
-					print("🎬 Using action fallback: ", fallback)
+					# print("🎬 Using action fallback: ", fallback)
 					return fallback
 	
 	# General fallback hierarchy - still prioritize movement
@@ -1048,15 +974,15 @@ func _get_fallback_animation(facing_name: String, movement_name: String, movemen
 	
 	for fallback in general_fallbacks:
 		if animated_sprite.sprite_frames.has_animation(fallback):
-			print("🎬 Using general fallback: ", fallback)
+			# print("🎬 Using general fallback: ", fallback)
 			return fallback
 	
 	# Last resort - use first available animation
 	if available_animations.size() > 0:
-		print("🎬 Using first available animation: ", available_animations[0])
+		# print("🎬 Using first available animation: ", available_animations[0])
 		return available_animations[0]
 	
-	print("🎬 ERROR: No animations available!")
+	# print("🎬 ERROR: No animations available!")
 	return "default"
 
 func _get_running_animation_fallbacks(facing_name: String, movement_type: String, available_animations: Array) -> Array:
@@ -1179,7 +1105,8 @@ func _change_animation(new_animation: String):
 		if not animated_sprite:
 			print("🎬 ERROR: No animated_sprite!")
 		elif new_animation == current_animation:
-			print("🎬 SKIP: Already ", new_animation)
+			# print("🎬 SKIP: Already ", new_animation)
+			pass
 
 func _get_direction_name(direction: Vector2) -> String:
 	if direction == Vector2.ZERO:
@@ -1357,10 +1284,21 @@ func get_combat_status() -> Dictionary:
 		"melee_combo_timer": melee_combo_timer,
 		"q_cooldown": q_ability_cooldown_timer,
 		"r_cooldown": r_ability_cooldown_timer,
-		"shield_state": shield_state,
+		"shield_status": "active" if is_shielding else "none",
 		"is_shield_active": is_shield_active,
-		"hitbox_info": get_hitbox_debug_info()
+		"hitbox_info": get_hitbox_debug_info(),
+		"effect_system": "sprites" if use_sprite_effects else "particles",
+		"effect_status": _get_active_effect_status()
 	}
+
+func _get_active_effect_status() -> Dictionary:
+	"""Get status from the currently active effect system"""
+	if use_sprite_effects and effect_manager:
+		return effect_manager.get_effect_status()
+	elif not use_sprite_effects and particle_manager:
+		return particle_manager.get_particle_status()
+	else:
+		return {"system": "none", "initialized": false}
 
 func get_melee_hitbox_size() -> Vector2:
 	"""Get the actual size of the melee hitbox from its collision shape"""
@@ -1425,3 +1363,111 @@ func test_hitbox_debug():
 	print("✅ Visual hitbox debug enabled - perform attacks to see hitboxes!")
 	print("📱 UI Debug: Check debug panels for real-time hitbox info")
 	print("🎮 To disable: set show_hitbox_debug = false")
+
+# ===== EFFECT SYSTEM UTILITIES =====
+
+func switch_to_sprite_effects():
+	"""Switch to using sprite-based effects (requires sprites to be available)"""
+	use_sprite_effects = true
+	print("🎨 Switched to sprite-based effects")
+	print("💡 Note: You'll need to create Aseprite animations and assign them to work")
+
+func switch_to_particle_effects():
+	"""Switch to using particle-based effects"""
+	use_sprite_effects = false
+	print("🎨 Switched to particle-based effects")
+
+func get_current_effect_system() -> String:
+	"""Get the name of the currently active effect system"""
+	return "sprites" if use_sprite_effects else "particles"
+
+func is_effect_system_ready() -> bool:
+	"""Check if the current effect system is properly initialized"""
+	if use_sprite_effects:
+		return effect_manager != null
+	else:
+		return particle_manager != null
+
+# ===== UPGRADE SYSTEM INTEGRATION =====
+
+func _setup_upgrade_system():
+	"""Set up upgrade system integration for this character"""
+	# Only players should receive upgrade effects
+	if not is_in_group("players"):
+		return
+	
+	var upgrade_manager = UpgradeManager.get_instance()
+
+
+	if not upgrade_manager:
+		print("⚠️ UpgradeManager not found for character upgrade integration")
+		return
+	
+	# Connect to upgrade signals
+	upgrade_manager.aoe_radius_changed.connect(_on_aoe_radius_upgrade)
+	upgrade_manager.max_health_changed.connect(_on_max_health_upgrade)
+	upgrade_manager.healing_rate_changed.connect(_on_healing_rate_upgrade)
+	
+	# Initialize with current upgrade manager values
+	upgrade_manager.initialize_with_player(self)
+	
+	# Apply current upgrades
+	_apply_current_upgrades()
+	
+	print("🔧 Upgrade system integrated for player character")
+
+func _apply_current_upgrades():
+	"""Apply all current upgrade effects to this character"""
+	var upgrade_manager = UpgradeManager.get_instance()
+	if not upgrade_manager:
+		return
+	
+	# Apply AoE radius upgrade
+	var radius_multiplier = upgrade_manager.get_aoe_radius_multiplier()
+	ability_hitbox_radius = base_ability_hitbox_radius * radius_multiplier
+	
+	# Apply health upgrade
+	var upgraded_max_health = upgrade_manager.get_max_health_with_upgrades()
+	if upgraded_max_health != max_health:
+		var health_percentage = float(current_health) / float(max_health)
+		max_health = upgraded_max_health
+		current_health = int(max_health * health_percentage) # Maintain health percentage
+	
+	print("🔧 Applied current upgrades: radius=", ability_hitbox_radius, ", max_health=", max_health)
+
+func _on_aoe_radius_upgrade(new_multiplier: float):
+	"""Handle AoE radius upgrade"""
+	ability_hitbox_radius = base_ability_hitbox_radius * new_multiplier
+	print("🔧 AoE radius upgraded: ", ability_hitbox_radius, " (multiplier: ", new_multiplier, ")")
+
+func _on_max_health_upgrade(new_max_health: int):
+	"""Handle max health upgrade"""
+	var health_percentage = float(current_health) / float(max_health)
+	max_health = new_max_health
+	current_health = int(max_health * health_percentage) # Maintain health percentage
+	print("🔧 Max health upgraded: ", max_health, " (current: ", current_health, ")")
+
+func _on_healing_rate_upgrade(new_rate: float):
+	"""Handle healing rate upgrade"""
+	# Store the healing rate for use in damage dealing
+	# This will be used in the damage dealing functions
+	print("🔧 Healing rate upgraded: ", new_rate, "%")
+
+func apply_healing_on_attack(damage_dealt: int):
+	"""Apply healing based on damage dealt and healing upgrade"""
+	var upgrade_manager = UpgradeManager.get_instance()
+	if not upgrade_manager:
+		return
+	
+	var healing_rate = upgrade_manager.get_healing_on_attack_rate()
+	if healing_rate <= 0:
+		return
+	
+	var healing_amount = int(damage_dealt * (healing_rate / 100.0))
+	if healing_amount > 0:
+		current_health = min(current_health + healing_amount, max_health)
+		print("❤️ Healed ", healing_amount, " HP from attack (", healing_rate, "% of ", damage_dealt, " damage)")
+
+func get_current_ability_radius() -> float:
+	"""Get the current ability radius including upgrades"""
+	return ability_hitbox_radius

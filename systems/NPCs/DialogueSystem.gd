@@ -137,15 +137,29 @@ func get_current_available_dialogue() -> String:
 # ===== INTERACTION HANDLING =====
 
 func _input(event):
-	# Only handle input when player is in range and dialogue UI is available
+	# Only handle input when player is in range
 	if not player_in_range or not current_player:
 		return
 	
+	# Debug: Check if we have dialogue_ui
+	if not dialogue_ui:
+		print("⚠️ ", character_name, " has no dialogue_ui connected!")
+		return
+	
 	# Check for interaction key press
-	if event.is_action_pressed("interact") and not is_dialogue_active:
-		start_dialogue()
-	elif event.is_action_pressed("interact") and is_dialogue_active:
-		advance_dialogue()
+	if event.is_action_pressed("interact"):
+		print("🎯 ", character_name, " received E key press")
+		if not is_dialogue_active:
+			start_dialogue()
+		elif is_dialogue_active:
+			# Only advance if the UI is not currently typing (or allow skipping)
+			if dialogue_ui.is_typing:
+				dialogue_ui.skip_typing()
+			else:
+				advance_dialogue()
+		
+		# Consume the input to prevent other systems from processing it
+		get_viewport().set_input_as_handled()
 
 func start_dialogue():
 	"""Start the next available dialogue"""
@@ -257,11 +271,13 @@ func _on_player_body_exited(body):
 		_hide_interaction_prompt()
 
 func _show_interaction_prompt():
-	# Show interaction UI - will be implemented with UI system
+	# Show interaction UI prompt
 	print("💡 ", interaction_prompt)
+	# TODO: Could add a floating prompt UI above the NPC
 
 func _hide_interaction_prompt():
-	# Hide interaction UI - will be implemented with UI system
+	# Hide interaction UI prompt
+	# TODO: Hide floating prompt UI if implemented
 	pass
 
 # ===== UTILITY METHODS =====

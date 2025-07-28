@@ -1,4 +1,4 @@
-[gd_scene load_steps=2059 format=3 uid="uid://bwd0k3vdhvqyc"]
+[gd_scene load_steps=2060 format=3 uid="uid://bwd0k3vdhvqyc"]
 
 [ext_resource type="Texture2D" uid="uid://d2xlvn7v5raof" path="res://art/sprites/knight_2/Run.png" id="1_encq8"]
 [ext_resource type="Script" path="res://systems/player/PlayerController.gd" id="1_player_script"]
@@ -20,7 +20,9 @@
 [ext_resource type="Texture2D" uid="uid://dkyt042uqljr6" path="res://art/sprites/knight_2/combat/ShieldBlockStart.png" id="12_s5q6v"]
 [ext_resource type="Texture2D" uid="uid://dx6plvablkuvm" path="res://art/sprites/knight_2/combat/ShieldBlockMid.png" id="13_jc113"]
 [ext_resource type="Texture2D" uid="uid://pq8epts1tl1" path="res://art/sprites/knight_2/combat/TakeDamage.png" id="17_64g15"]
-[ext_resource type="PackedScene" path="res://scenes/NPCs/DialogueUI.tscn" id="19_1kijy"]
+[ext_resource type="PackedScene" uid="uid://dt8w2ot2vy737" path="res://scenes/NPCs/DialogueUI.tscn" id="19_1kijy"]
+[ext_resource type="PackedScene" uid="uid://b8x7w2oy5s8pk" path="res://scenes/player/PlayerUI.tscn" id="20_playerui"]
+[ext_resource type="PackedScene" uid="uid://b5lm0einbo3iu" path="res://scenes/player/upgradeUI.tscn" id="21_6jwdt"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_kqtre"]
 atlas = ExtResource("5_8trma")
@@ -4277,10 +4279,6 @@ region = Rect2(192, 128, 64, 64)
 [sub_resource type="AtlasTexture" id="AtlasTexture_j314v"]
 atlas = ExtResource("4_vfq0k")
 region = Rect2(256, 128, 64, 64)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_vxbjd"]
-atlas = ExtResource("4_vfq0k")
-region = Rect2(320, 128, 64, 64)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_rk72w"]
 atlas = ExtResource("4_vfq0k")
@@ -11697,9 +11695,6 @@ animations = [{
 "texture": SubResource("AtlasTexture_j314v")
 }, {
 "duration": 1.0,
-"texture": SubResource("AtlasTexture_vxbjd")
-}, {
-"duration": 1.0,
 "texture": SubResource("AtlasTexture_rk72w")
 }, {
 "duration": 1.0,
@@ -14968,10 +14963,13 @@ offset_left = 3.0
 offset_top = 114.0
 offset_right = 3.0
 offset_bottom = 114.0
-grow_horizontal = 2
-grow_vertical = 2
 scale = Vector2(0.45, 0.45)
 size_flags_vertical = 8
+
+[node name="PlayerUI" parent="Camera2D" instance=ExtResource("20_playerui")]
+
+[node name="UpgradeUI" parent="Camera2D" instance=ExtResource("21_6jwdt")]
+scale = Vector2(0.25, 0.25)
 
 [node name="PlayerUpgrades" type="Node" parent="."]
 

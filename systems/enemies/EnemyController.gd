@@ -135,6 +135,9 @@ func _on_character_death():
 		attack_range.set_deferred("monitoring", false)
 		attack_range.set_deferred("monitorable", false)
 	
+	# Drop shadow essence when enemy dies
+	_drop_shadow_essence()
+	
 	print("🚫 ", difficulty_name, " collision and AI systems disabled")
 
 func _on_damage_taken(amount: int):
@@ -1235,3 +1238,45 @@ func print_ai_hitbox_info():
 		hitbox_info.melee_size == hitbox_info.configured_melee_size,
 		abs(hitbox_info.ability_radius - hitbox_info.configured_ability_radius) < 0.1
 	])
+
+# ===== ESSENCE DROP SYSTEM =====
+
+func _drop_shadow_essence():
+	"""Drop shadow essence when enemy dies - amount based on difficulty and player upgrades"""
+	# Base essence drop: 5-10 random
+	var base_essence = randi_range(5, 10)
+	
+	# Multiply by difficulty level (1-5)
+	var essence_with_difficulty = base_essence * ai_difficulty
+	
+	# Apply essence extraction upgrade bonus
+	var extraction_rate = 1.0 # Base 100% (no bonus)
+	if UpgradeManager.get_instance():
+		var bonus_rate = UpgradeManager.get_instance().get_essence_extraction_rate()
+		extraction_rate = 1.0 + (bonus_rate / 100.0) # Convert percentage to multiplier
+	
+	# Calculate final essence amount
+	var final_essence = int(essence_with_difficulty * extraction_rate)
+	
+	# Give essence to player
+	_give_essence_to_player(final_essence)
+	
+	print("💎 ", difficulty_name, " dropped ", final_essence, " essence (base: ", base_essence, " * difficulty: ", ai_difficulty, " * extraction: ", extraction_rate, ")")
+
+func _give_essence_to_player(amount: int):
+	"""Give essence to the player"""
+	# Find the player and give them essence
+	var players = get_tree().get_nodes_in_group("players")
+	for player in players:
+		if player.has_method("add_shadow_essence"):
+			player.add_shadow_essence(amount)
+			return
+	
+	# Fallback: try to find PlayerUI directly
+	var player_ui_nodes = get_tree().get_nodes_in_group("player_ui")
+	for ui in player_ui_nodes:
+		if ui.has_method("add_shadow_essence"):
+			ui.add_shadow_essence(amount)
+			return
+	
+	print("⚠️ Could not find player to give essence to!")
